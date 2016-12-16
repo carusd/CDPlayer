@@ -237,7 +237,6 @@ static long long VideoBlockSize = 100000; // in bytes
     
     __block NSInteger mergedSuccessMark = 0;
     
-    __weak CDVideoDownloadTask *wself = self;
     
     
     if (self.loadedBlocks.count <= 0) {

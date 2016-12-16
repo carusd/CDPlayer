@@ -34,13 +34,9 @@
     self.videoPaths = [paths componentsSeparatedByString:@"\n"];
     
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleStateChanged:) name:CDVideoDownloadStateDidChangedNotif object:nil];
 }
 
-- (void)handleStateChanged:(NSNotification *)notif {
-    CDVideoDownloadTask *task = notif.userInfo[CDVideoDownloadStateDidChangedNotifTaskKey];
-    NSLog(@"new state %d", task.state);
-}
+
 
 - (void)tearDown {
     
