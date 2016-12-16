@@ -7,14 +7,33 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6BE482971DE815AF00A1AB88 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BE482961DE815AF00A1AB88 /* main.m */; };
-		6BE4829A1DE815AF00A1AB88 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BE482991DE815AF00A1AB88 /* AppDelegate.m */; };
-		6BE4829D1DE815AF00A1AB88 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BE4829C1DE815AF00A1AB88 /* ViewController.m */; };
-		6BE482A01DE815AF00A1AB88 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6BE4829E1DE815AF00A1AB88 /* Main.storyboard */; };
-		6BE482A21DE815AF00A1AB88 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6BE482A11DE815AF00A1AB88 /* Assets.xcassets */; };
-		6BE482A51DE815AF00A1AB88 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6BE482A31DE815AF00A1AB88 /* LaunchScreen.storyboard */; };
+		6B1B2AA71DF159EA0028FAB1 /* CDPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 6B1B2AA61DF159EA0028FAB1 /* CDPlayer.m */; };
+		6B343AF51DFE444B00719DC2 /* CDVideoBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BD763B31DF958E900B581B9 /* CDVideoBlock.m */; };
+		6B343AF61DFE445200719DC2 /* CDVideoDownloadMegaManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BD763AE1DF7FB8A00B581B9 /* CDVideoDownloadMegaManager.m */; };
+		6B343AF71DFE445800719DC2 /* CDPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 6B1B2AA61DF159EA0028FAB1 /* CDPlayer.m */; };
+		6B474D861DFFF93A000C3A21 /* CDVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 6B474D851DFFF93A000C3A21 /* CDVideo.m */; };
+		6B474D871DFFF950000C3A21 /* CDVideo.m in Sources */ = {isa = PBXBuildFile; fileRef = 6B474D851DFFF93A000C3A21 /* CDVideo.m */; };
+		6B6390821DED175B00A32D9F /* CDVideoDownloadManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 6B6390811DED175B00A32D9F /* CDVideoDownloadManager.m */; };
+		6B6390851DED179100A32D9F /* CDVideoDownloadTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 6B6390841DED179100A32D9F /* CDVideoDownloadTask.m */; };
+		6BD763AF1DF7FB8A00B581B9 /* CDVideoDownloadMegaManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BD763AE1DF7FB8A00B581B9 /* CDVideoDownloadMegaManager.m */; };
+		6BD763B41DF958E900B581B9 /* CDVideoBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BD763B31DF958E900B581B9 /* CDVideoBlock.m */; };
+		6BD763B61DF959FE00B581B9 /* CDTestDefaultManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BD763B51DF959FE00B581B9 /* CDTestDefaultManager.m */; };
+		6BD763B91DF9695000B581B9 /* plainvideos in Resources */ = {isa = PBXBuildFile; fileRef = 6BD763B81DF9695000B581B9 /* plainvideos */; };
+		6BD763BA1DF9695D00B581B9 /* plainvideos in Resources */ = {isa = PBXBuildFile; fileRef = 6BD763B81DF9695000B581B9 /* plainvideos */; };
+		6BD763BB1DF9695E00B581B9 /* plainvideos in Resources */ = {isa = PBXBuildFile; fileRef = 6BD763B81DF9695000B581B9 /* plainvideos */; };
 		6BE482B01DE815AF00A1AB88 /* CDPlayerTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BE482AF1DE815AF00A1AB88 /* CDPlayerTests.m */; };
 		6BE482BB1DE815AF00A1AB88 /* CDPlayerUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BE482BA1DE815AF00A1AB88 /* CDPlayerUITests.m */; };
+		6BE482D41DE8228000A1AB88 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BE482CA1DE8228000A1AB88 /* AppDelegate.m */; };
+		6BE482D51DE8228000A1AB88 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6BE482CB1DE8228000A1AB88 /* Assets.xcassets */; };
+		6BE482D61DE8228000A1AB88 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6BE482CC1DE8228000A1AB88 /* LaunchScreen.storyboard */; };
+		6BE482D71DE8228000A1AB88 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6BE482CE1DE8228000A1AB88 /* Main.storyboard */; };
+		6BE482D81DE8228000A1AB88 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6BE482D01DE8228000A1AB88 /* Info.plist */; };
+		6BE482D91DE8228000A1AB88 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BE482D11DE8228000A1AB88 /* main.m */; };
+		6BE482DA1DE8228000A1AB88 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6BE482D31DE8228000A1AB88 /* ViewController.m */; };
+		6BFFC2461DED775C00CF7855 /* CDVideoDownloadManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 6B6390811DED175B00A32D9F /* CDVideoDownloadManager.m */; };
+		6BFFC2471DED776700CF7855 /* CDVideoDownloadTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 6B6390841DED179100A32D9F /* CDVideoDownloadTask.m */; };
+		C79FA60C454F377D02092A37 /* libPods-CDPlayer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 69BDB7DDA41B09293DEA53F4 /* libPods-CDPlayer.a */; };
+		D85341714FD27B67E14D0876 /* libPods-CDPlayerTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 779E2BDD0D7009445026E83A /* libPods-CDPlayerTests.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,22 +54,44 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1F34A6F51ABA3172CBEA68F4 /* Pods-CDPlayerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CDPlayerTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-CDPlayerTests/Pods-CDPlayerTests.debug.xcconfig"; sourceTree = "<group>"; };
+		2DDB6A658BE7972220ADA7D0 /* Pods-CDPlayerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CDPlayerTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-CDPlayerTests/Pods-CDPlayerTests.release.xcconfig"; sourceTree = "<group>"; };
+		69BDB7DDA41B09293DEA53F4 /* libPods-CDPlayer.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CDPlayer.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B1B2AA61DF159EA0028FAB1 /* CDPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CDPlayer.m; sourceTree = "<group>"; };
+		6B474D841DFFF93A000C3A21 /* CDVideo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CDVideo.h; sourceTree = "<group>"; };
+		6B474D851DFFF93A000C3A21 /* CDVideo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CDVideo.m; sourceTree = "<group>"; };
+		6B6390801DED175B00A32D9F /* CDVideoDownloadManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CDVideoDownloadManager.h; sourceTree = "<group>"; };
+		6B6390811DED175B00A32D9F /* CDVideoDownloadManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CDVideoDownloadManager.m; sourceTree = "<group>"; };
+		6B6390831DED179100A32D9F /* CDVideoDownloadTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CDVideoDownloadTask.h; sourceTree = "<group>"; };
+		6B6390841DED179100A32D9F /* CDVideoDownloadTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CDVideoDownloadTask.m; sourceTree = "<group>"; };
+		6BD763AD1DF7FB8A00B581B9 /* CDVideoDownloadMegaManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CDVideoDownloadMegaManager.h; sourceTree = "<group>"; };
+		6BD763AE1DF7FB8A00B581B9 /* CDVideoDownloadMegaManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CDVideoDownloadMegaManager.m; sourceTree = "<group>"; };
+		6BD763B01DF9563500B581B9 /* CDVideoBlock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDVideoBlock.h; sourceTree = "<group>"; };
+		6BD763B31DF958E900B581B9 /* CDVideoBlock.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CDVideoBlock.m; sourceTree = "<group>"; };
+		6BD763B51DF959FE00B581B9 /* CDTestDefaultManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CDTestDefaultManager.m; sourceTree = "<group>"; };
+		6BD763B71DF95A3D00B581B9 /* CDPlayerKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDPlayerKit.h; sourceTree = "<group>"; };
+		6BD763B81DF9695000B581B9 /* plainvideos */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = plainvideos; sourceTree = "<group>"; };
 		6BE482921DE815AF00A1AB88 /* CDPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CDPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		6BE482961DE815AF00A1AB88 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		6BE482981DE815AF00A1AB88 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
-		6BE482991DE815AF00A1AB88 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		6BE4829B1DE815AF00A1AB88 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		6BE4829C1DE815AF00A1AB88 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		6BE4829F1DE815AF00A1AB88 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		6BE482A11DE815AF00A1AB88 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		6BE482A41DE815AF00A1AB88 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		6BE482A61DE815AF00A1AB88 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6BE482AB1DE815AF00A1AB88 /* CDPlayerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CDPlayerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6BE482AF1DE815AF00A1AB88 /* CDPlayerTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CDPlayerTests.m; sourceTree = "<group>"; };
 		6BE482B11DE815AF00A1AB88 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		6BE482B61DE815AF00A1AB88 /* CDPlayerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CDPlayerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6BE482BA1DE815AF00A1AB88 /* CDPlayerUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CDPlayerUITests.m; sourceTree = "<group>"; };
 		6BE482BC1DE815AF00A1AB88 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6BE482C91DE8228000A1AB88 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		6BE482CA1DE8228000A1AB88 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		6BE482CB1DE8228000A1AB88 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		6BE482CD1DE8228000A1AB88 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		6BE482CF1DE8228000A1AB88 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		6BE482D01DE8228000A1AB88 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6BE482D11DE8228000A1AB88 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		6BE482D21DE8228000A1AB88 /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		6BE482D31DE8228000A1AB88 /* ViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		6BE482DC1DE8268900A1AB88 /* CDDownloadProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDDownloadProtocol.h; sourceTree = "<group>"; };
+		6BFFC2451DED73CA00CF7855 /* CDPlayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CDPlayer.h; sourceTree = "<group>"; };
+		779E2BDD0D7009445026E83A /* libPods-CDPlayerTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CDPlayerTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		934DC5591398460EB8C579ED /* Pods-CDPlayer.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CDPlayer.debug.xcconfig"; path = "Pods/Target Support Files/Pods-CDPlayer/Pods-CDPlayer.debug.xcconfig"; sourceTree = "<group>"; };
+		E1E60D691FACC157429BD8C0 /* Pods-CDPlayer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CDPlayer.release.xcconfig"; path = "Pods/Target Support Files/Pods-CDPlayer/Pods-CDPlayer.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +99,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C79FA60C454F377D02092A37 /* libPods-CDPlayer.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +107,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D85341714FD27B67E14D0876 /* libPods-CDPlayerTests.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -81,10 +124,14 @@
 		6BE482891DE815AF00A1AB88 = {
 			isa = PBXGroup;
 			children = (
+				6BD763B81DF9695000B581B9 /* plainvideos */,
+				6BE482C81DE8228000A1AB88 /* demo */,
 				6BE482941DE815AF00A1AB88 /* CDPlayer */,
 				6BE482AE1DE815AF00A1AB88 /* CDPlayerTests */,
 				6BE482B91DE815AF00A1AB88 /* CDPlayerUITests */,
 				6BE482931DE815AF00A1AB88 /* Products */,
+				8FB45F47BD92D40DFAC9B34E /* Pods */,
+				79E20258BD36A169780D5627 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -101,31 +148,27 @@
 		6BE482941DE815AF00A1AB88 /* CDPlayer */ = {
 			isa = PBXGroup;
 			children = (
-				6BE482981DE815AF00A1AB88 /* AppDelegate.h */,
-				6BE482991DE815AF00A1AB88 /* AppDelegate.m */,
-				6BE4829B1DE815AF00A1AB88 /* ViewController.h */,
-				6BE4829C1DE815AF00A1AB88 /* ViewController.m */,
-				6BE4829E1DE815AF00A1AB88 /* Main.storyboard */,
-				6BE482A11DE815AF00A1AB88 /* Assets.xcassets */,
-				6BE482A31DE815AF00A1AB88 /* LaunchScreen.storyboard */,
-				6BE482A61DE815AF00A1AB88 /* Info.plist */,
-				6BE482951DE815AF00A1AB88 /* Supporting Files */,
+				6BE482DC1DE8268900A1AB88 /* CDDownloadProtocol.h */,
+				6BD763B71DF95A3D00B581B9 /* CDPlayerKit.h */,
+				6BD763B01DF9563500B581B9 /* CDVideoBlock.h */,
+				6BD763B31DF958E900B581B9 /* CDVideoBlock.m */,
+				6B6390801DED175B00A32D9F /* CDVideoDownloadManager.h */,
+				6B6390811DED175B00A32D9F /* CDVideoDownloadManager.m */,
+				6BD763AD1DF7FB8A00B581B9 /* CDVideoDownloadMegaManager.h */,
+				6BD763AE1DF7FB8A00B581B9 /* CDVideoDownloadMegaManager.m */,
+				6B6390831DED179100A32D9F /* CDVideoDownloadTask.h */,
+				6B6390841DED179100A32D9F /* CDVideoDownloadTask.m */,
+				6BFFC2451DED73CA00CF7855 /* CDPlayer.h */,
+				6B1B2AA61DF159EA0028FAB1 /* CDPlayer.m */,
 			);
 			path = CDPlayer;
-			sourceTree = "<group>";
-		};
-		6BE482951DE815AF00A1AB88 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				6BE482961DE815AF00A1AB88 /* main.m */,
-			);
-			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 		6BE482AE1DE815AF00A1AB88 /* CDPlayerTests */ = {
 			isa = PBXGroup;
 			children = (
 				6BE482AF1DE815AF00A1AB88 /* CDPlayerTests.m */,
+				6BD763B51DF959FE00B581B9 /* CDTestDefaultManager.m */,
 				6BE482B11DE815AF00A1AB88 /* Info.plist */,
 			);
 			path = CDPlayerTests;
@@ -140,6 +183,44 @@
 			path = CDPlayerUITests;
 			sourceTree = "<group>";
 		};
+		6BE482C81DE8228000A1AB88 /* demo */ = {
+			isa = PBXGroup;
+			children = (
+				6BE482C91DE8228000A1AB88 /* AppDelegate.h */,
+				6BE482CA1DE8228000A1AB88 /* AppDelegate.m */,
+				6BE482CB1DE8228000A1AB88 /* Assets.xcassets */,
+				6BE482CC1DE8228000A1AB88 /* LaunchScreen.storyboard */,
+				6BE482CE1DE8228000A1AB88 /* Main.storyboard */,
+				6BE482D01DE8228000A1AB88 /* Info.plist */,
+				6BE482D11DE8228000A1AB88 /* main.m */,
+				6BE482D21DE8228000A1AB88 /* ViewController.h */,
+				6BE482D31DE8228000A1AB88 /* ViewController.m */,
+				6B474D841DFFF93A000C3A21 /* CDVideo.h */,
+				6B474D851DFFF93A000C3A21 /* CDVideo.m */,
+			);
+			path = demo;
+			sourceTree = "<group>";
+		};
+		79E20258BD36A169780D5627 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				69BDB7DDA41B09293DEA53F4 /* libPods-CDPlayer.a */,
+				779E2BDD0D7009445026E83A /* libPods-CDPlayerTests.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		8FB45F47BD92D40DFAC9B34E /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				934DC5591398460EB8C579ED /* Pods-CDPlayer.debug.xcconfig */,
+				E1E60D691FACC157429BD8C0 /* Pods-CDPlayer.release.xcconfig */,
+				1F34A6F51ABA3172CBEA68F4 /* Pods-CDPlayerTests.debug.xcconfig */,
+				2DDB6A658BE7972220ADA7D0 /* Pods-CDPlayerTests.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -147,9 +228,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 6BE482BF1DE815AF00A1AB88 /* Build configuration list for PBXNativeTarget "CDPlayer" */;
 			buildPhases = (
+				45DD195E9ACB25AECBA2B9F4 /* [CP] Check Pods Manifest.lock */,
 				6BE4828E1DE815AF00A1AB88 /* Sources */,
 				6BE4828F1DE815AF00A1AB88 /* Frameworks */,
 				6BE482901DE815AF00A1AB88 /* Resources */,
+				6429E5DCDAE6B6EBD388EB9E /* [CP] Embed Pods Frameworks */,
+				6AEE1F1181FFBF7B46AD3800 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -164,9 +248,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 6BE482C21DE815AF00A1AB88 /* Build configuration list for PBXNativeTarget "CDPlayerTests" */;
 			buildPhases = (
+				C19C6794FBF2164CA8A72F02 /* [CP] Check Pods Manifest.lock */,
 				6BE482A71DE815AF00A1AB88 /* Sources */,
 				6BE482A81DE815AF00A1AB88 /* Frameworks */,
 				6BE482A91DE815AF00A1AB88 /* Resources */,
+				4A6AF630FA407BF37A0A541B /* [CP] Embed Pods Frameworks */,
+				FC67B2FD7375874FD8E80040 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -249,9 +336,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6BE482A51DE815AF00A1AB88 /* LaunchScreen.storyboard in Resources */,
-				6BE482A21DE815AF00A1AB88 /* Assets.xcassets in Resources */,
-				6BE482A01DE815AF00A1AB88 /* Main.storyboard in Resources */,
+				6BE482D71DE8228000A1AB88 /* Main.storyboard in Resources */,
+				6BE482D81DE8228000A1AB88 /* Info.plist in Resources */,
+				6BE482D61DE8228000A1AB88 /* LaunchScreen.storyboard in Resources */,
+				6BD763B91DF9695000B581B9 /* plainvideos in Resources */,
+				6BE482D51DE8228000A1AB88 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -259,6 +348,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6BD763BA1DF9695D00B581B9 /* plainvideos in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -266,19 +356,119 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6BD763BB1DF9695E00B581B9 /* plainvideos in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		45DD195E9ACB25AECBA2B9F4 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		4A6AF630FA407BF37A0A541B /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-CDPlayerTests/Pods-CDPlayerTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		6429E5DCDAE6B6EBD388EB9E /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-CDPlayer/Pods-CDPlayer-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		6AEE1F1181FFBF7B46AD3800 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-CDPlayer/Pods-CDPlayer-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		C19C6794FBF2164CA8A72F02 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		FC67B2FD7375874FD8E80040 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-CDPlayerTests/Pods-CDPlayerTests-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		6BE4828E1DE815AF00A1AB88 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6BE4829D1DE815AF00A1AB88 /* ViewController.m in Sources */,
-				6BE4829A1DE815AF00A1AB88 /* AppDelegate.m in Sources */,
-				6BE482971DE815AF00A1AB88 /* main.m in Sources */,
+				6B6390821DED175B00A32D9F /* CDVideoDownloadManager.m in Sources */,
+				6BE482DA1DE8228000A1AB88 /* ViewController.m in Sources */,
+				6BD763B41DF958E900B581B9 /* CDVideoBlock.m in Sources */,
+				6B474D861DFFF93A000C3A21 /* CDVideo.m in Sources */,
+				6BD763AF1DF7FB8A00B581B9 /* CDVideoDownloadMegaManager.m in Sources */,
+				6BE482D91DE8228000A1AB88 /* main.m in Sources */,
+				6BE482D41DE8228000A1AB88 /* AppDelegate.m in Sources */,
+				6B6390851DED179100A32D9F /* CDVideoDownloadTask.m in Sources */,
+				6B1B2AA71DF159EA0028FAB1 /* CDPlayer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -286,6 +476,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6B343AF61DFE445200719DC2 /* CDVideoDownloadMegaManager.m in Sources */,
+				6BD763B61DF959FE00B581B9 /* CDTestDefaultManager.m in Sources */,
+				6B474D871DFFF950000C3A21 /* CDVideo.m in Sources */,
+				6B343AF71DFE445800719DC2 /* CDPlayer.m in Sources */,
+				6BFFC2461DED775C00CF7855 /* CDVideoDownloadManager.m in Sources */,
+				6B343AF51DFE444B00719DC2 /* CDVideoBlock.m in Sources */,
+				6BFFC2471DED776700CF7855 /* CDVideoDownloadTask.m in Sources */,
 				6BE482B01DE815AF00A1AB88 /* CDPlayerTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -314,20 +511,20 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		6BE4829E1DE815AF00A1AB88 /* Main.storyboard */ = {
+		6BE482CC1DE8228000A1AB88 /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				6BE4829F1DE815AF00A1AB88 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-		6BE482A31DE815AF00A1AB88 /* LaunchScreen.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				6BE482A41DE815AF00A1AB88 /* Base */,
+				6BE482CD1DE8228000A1AB88 /* Base */,
 			);
 			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		6BE482CE1DE8228000A1AB88 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6BE482CF1DE8228000A1AB88 /* Base */,
+			);
+			name = Main.storyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -423,10 +620,12 @@
 		};
 		6BE482C01DE815AF00A1AB88 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 934DC5591398460EB8C579ED /* Pods-CDPlayer.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = BL7H2T6AC4;
-				INFOPLIST_FILE = CDPlayer/Info.plist;
+				INFOPLIST_FILE = demo/info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.carusd.CDPlayer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -435,10 +634,12 @@
 		};
 		6BE482C11DE815AF00A1AB88 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = E1E60D691FACC157429BD8C0 /* Pods-CDPlayer.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = BL7H2T6AC4;
-				INFOPLIST_FILE = CDPlayer/Info.plist;
+				INFOPLIST_FILE = demo/info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.carusd.CDPlayer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -447,6 +648,7 @@
 		};
 		6BE482C31DE815AF00A1AB88 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1F34A6F51ABA3172CBEA68F4 /* Pods-CDPlayerTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				DEVELOPMENT_TEAM = BL7H2T6AC4;
@@ -460,6 +662,7 @@
 		};
 		6BE482C41DE815AF00A1AB88 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 2DDB6A658BE7972220ADA7D0 /* Pods-CDPlayerTests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				DEVELOPMENT_TEAM = BL7H2T6AC4;
@@ -514,6 +717,7 @@
 				6BE482C11DE815AF00A1AB88 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		6BE482C21DE815AF00A1AB88 /* Build configuration list for PBXNativeTarget "CDPlayerTests" */ = {
 			isa = XCConfigurationList;
@@ -522,6 +726,7 @@
 				6BE482C41DE815AF00A1AB88 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		6BE482C51DE815AF00A1AB88 /* Build configuration list for PBXNativeTarget "CDPlayerUITests" */ = {
 			isa = XCConfigurationList;
@@ -530,6 +735,7 @@
 				6BE482C71DE815AF00A1AB88 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
