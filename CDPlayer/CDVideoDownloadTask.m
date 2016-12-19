@@ -416,7 +416,7 @@ static long long VideoBlockSize = 100000; // in bytes
 
 - (void)notifyStateChanged {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [[NSNotificationCenter defaultCenter] postNotificationName:CDVideoDownloadStateDidChangedNotif object:nil userInfo:@{CDVideoDownloadStateDidChangedNotifTaskKey: self}];
+        [[NSNotificationCenter defaultCenter] postNotificationName:CDVideoDownloadStateDidChangedNotif object:nil userInfo:@{CDVideoDownloadTaskNotifTaskKey: self}];
     });
 }
 

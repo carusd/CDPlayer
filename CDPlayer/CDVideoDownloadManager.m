@@ -41,7 +41,7 @@
 }
 
 - (void)handleTaskStateChanged:(NSNotification *)notif {
-    CDVideoDownloadTask *task = notif.userInfo[CDVideoDownloadStateDidChangedNotifTaskKey];
+    CDVideoDownloadTask *task = notif.userInfo[CDVideoDownloadTaskNotifTaskKey];
     if (CDVideoDownloadStateFinished == task.state ||
         CDVideoDownloadStateLoaded == task.state ||
         CDVideoDownloadStateLoadError == task.state) {
