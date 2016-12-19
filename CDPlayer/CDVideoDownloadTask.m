@@ -13,7 +13,11 @@
 
 
 NSString * const CDVideoDownloadStateDidChangedNotif = @"CDVideoDownloadStateDidChangedNotif";
-NSString * const CDVideoDownloadStateDidChangedNotifTaskKey = @"CDVideoDownloadStateDidChangedNotifTaskKey";
+NSString * const CDVideoDownloadTaskDidHasNewBlockNotif = @"CDVideoDownloadTaskDidHasNewBlockNotif";
+
+NSString * const CDVideoDownloadTaskNotifTaskKey = @"CDVideoDownloadTaskNotifTaskKey";
+
+
 
 
 
@@ -421,6 +425,6 @@ static long long VideoBlockSize = 100000; // in bytes
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"task: %@, state: %ld", self.label, self.state];
+    return [NSString stringWithFormat:@"task: %@, state: %lld", self.label, self.state];
 }
 @end

@@ -6,6 +6,8 @@ Pod::Spec.new do |s|
 
 
   s.description      = <<-DESC
+                        A player made of iOS API, support cache in playing.
+                        Allow you to initiate and dispatch multi download task.
                         
                         DESC
 

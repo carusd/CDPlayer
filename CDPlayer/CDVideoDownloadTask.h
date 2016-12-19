@@ -12,7 +12,9 @@
 
 
 extern NSString * const CDVideoDownloadStateDidChangedNotif;
-extern NSString * const CDVideoDownloadStateDidChangedNotifTaskKey;
+extern NSString * const CDVideoDownloadTaskDidHasNewBlockNotif;
+
+extern NSString * const CDVideoDownloadTaskNotifTaskKey;
 
 
 typedef void(^HandleDownloadProgress)(CGFloat);

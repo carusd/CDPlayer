@@ -56,7 +56,7 @@
 - (NSArray<CDVideoDownloadTask *> *)allTasks;
 @end
 
-typedef enum : NSUInteger {
+typedef enum : int64_t {
     CDVideoDownloadStateStandby,
     CDVideoDownloadStateWaiting,
     CDVideoDownloadStateLoading,
@@ -70,4 +70,10 @@ typedef enum : NSUInteger {
     CDVideoDownloadTaskPriorityMedium,
     CDVideoDownloadTaskPriorityImmediate, // 该优先级同一时间只允许有一个，如果同时出现了两个，其中一个会被降级
 } CDVideoDownloadTaskPriority;
+
+typedef enum : NSUInteger {
+    CDPlayerStatePlaying,
+    CDPlayerStateStop,
+    CDPlayerStateBuffering
+} CDPlayerState;
 

@@ -18,6 +18,8 @@
 @property (nonatomic, strong) AVPlayer *player;
 @property (nonatomic, strong) AVURLAsset *asset;
 @property (nonatomic, strong) AVPlayerItem *playerItem;
+@property (nonatomic) CDPlayerState state;
+
 @property (nonatomic) BOOL fromLocalFile;
 
 @property (nonatomic, strong) CDVideoDownloadTask *task;
@@ -25,6 +27,8 @@
 @property (nonatomic, strong) NSFileHandle *fileHandle;
 
 @property (nonatomic, strong) id<CDVideoDownloadTaskDispatcher> dispatcher;
+
+@property (nonatomic, strong) NSMutableArray<AVAssetResourceLoadingDataRequest *> *requests;
 
 @end
 
@@ -44,35 +48,51 @@
         self.task = [self.dispatcher makeTaskWithInfo:infoProvider];
         [self.dispatcher addTask:self.task];
         
+        
+        if (self.task.completelyLoaded) {
+            self.asset = [AVURLAsset assetWithURL:self.task.localURL];
+            self.fromLocalFile = YES;
+        } else {
+            self.asset = [AVURLAsset assetWithURL:self.task.videoURL];
+            [self.asset.resourceLoader setDelegate:self queue:dispatch_get_main_queue()];
+            
+            
+            self.fileHandle = [NSFileHandle fileHandleForReadingFromURL:self.task.localURL error:nil];
+            self.fromLocalFile = NO;
+        }
+        
+        self.playerItem = [AVPlayerItem playerItemWithAsset:self.asset];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
+        
+        self.player = [AVPlayer playerWithPlayerItem:self.playerItem];
+        
+        self.requests = [NSMutableArray array];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleTaskDidHasNewBlock:) name:CDVideoDownloadTaskDidHasNewBlockNotif object:nil];
     }
     
     return self;
 }
 
+- (void)handleTaskDidHasNewBlock:(NSNotification *)notif {
+    CDVideoDownloadTask *task = notif.userInfo[CDVideoDownloadTaskNotifTaskKey];
+    if (task == self.task) {
+        for (AVAssetResourceLoadingRequest *loadingRequest in self.requests) {
+            [self tryToFeedRequest:loadingRequest];
+        }
+    }
+}
+
 #pragma control
 - (void)play {
     
-    if (self.task.completelyLoaded) {
-        self.asset = [AVURLAsset assetWithURL:self.task.localURL];
-        self.fromLocalFile = YES;
-    } else {
+    if (!self.fromLocalFile) {
         
         [self.dispatcher tryToStartTask:self.task];
-        
-        self.asset = [AVURLAsset assetWithURL:self.task.videoURL];
-        [self.asset.resourceLoader setDelegate:self queue:dispatch_get_main_queue()];
-        
-        
-        self.fileHandle = [NSFileHandle fileHandleForReadingFromURL:self.task.localURL error:nil];
-        self.fromLocalFile = NO;
     }
     
-    self.playerItem = [AVPlayerItem playerItemWithAsset:self.asset];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
-    
-    self.player = [AVPlayer playerWithPlayerItem:self.playerItem];
-    
     [self.player play];
+    
     
 }
 
@@ -92,9 +112,7 @@
     
 }
 
-#pragma load
-- (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
-    
+- (BOOL)tryToFeedRequest:(AVAssetResourceLoadingRequest *)loadingRequest {
     __block BOOL found = NO;
     
     __weak CDPlayer *wself = self;
@@ -118,8 +136,17 @@
         
     }];
     
-    if (!found) {
+    return YES;
+}
+
+#pragma load
+- (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
+    
+    BOOL fed = [self tryToFeedRequest:loadingRequest];
+    
+    if (!fed) {
         self.task.offset = loadingRequest.dataRequest.requestedOffset;
+        [self.requests addObject:loadingRequest];
     }
     
     return YES;

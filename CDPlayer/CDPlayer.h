@@ -9,11 +9,14 @@
 #import "CDDownloadProtocol.h"
 #import <AVFoundation/AVFoundation.h>
 
+
+
 @interface CDPlayer : NSObject
 
 - (id)initWithInfo:(id<CDVideoInfoProvider>)infoProvider;
 
 @property (nonatomic, readonly) AVPlayer *player;
+@property (nonatomic, readonly) CDPlayerState state;
 
 @property (nonatomic) BOOL loop;
 @property (nonatomic ,readonly) BOOL fromLocalFile;
