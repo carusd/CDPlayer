@@ -10,20 +10,22 @@
 #define CDVideoBlock_h
 
 
-typedef struct
-{
-    long long offset;
-    long long length;
-} CDVideoBlock;
+@interface CDVideoBlock : NSObject<NSCoding>
 
-extern const CDVideoBlock CDVideoBlockZero;
+@property (nonatomic) long long offset;
+@property (nonatomic) long long length;
 
-extern CDVideoBlock CDVideoBlockMake(long long offset, long long length);
-extern BOOL CDVideoBlockEqual(CDVideoBlock b1, CDVideoBlock b2);
-extern BOOL CDVideoBlockContainsBlock(CDVideoBlock b1, CDVideoBlock b2);
-extern BOOL CDVideoBlockIntersect(CDVideoBlock b1, CDVideoBlock b2);
-extern CDVideoBlock CDVideoBlockMerge(CDVideoBlock b1, CDVideoBlock b2);
-extern BOOL CDVideoBlockBetween(CDVideoBlock b1, CDVideoBlock b2, CDVideoBlock b3);
+- (id)initWithOffset:(long long)offset length:(long long)length;
+
+- (BOOL)isValid;
+- (BOOL)isBlockEqual:(CDVideoBlock *)b;
+- (BOOL)containsBlock:(CDVideoBlock *)b;
+- (BOOL)intersetWithBlock:(CDVideoBlock *)b;
+- (CDVideoBlock *)blockWithMergingBlock:(CDVideoBlock *)b;
+- (BOOL)between:(CDVideoBlock *)b1 and:(CDVideoBlock *)b2;
+@end
+
+
 
 
 #endif /* CDVideoBlock_h */

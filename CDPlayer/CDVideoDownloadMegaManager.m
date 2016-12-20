@@ -36,7 +36,7 @@ NSString * const CDVideoDownloadDirURLDidChanged = @"CDVideoDownloadDirURLDidCha
     if (self) {
         self.dispatchers = [NSMutableDictionary dictionary];
         
-        NSString *path = [NSString stringWithFormat:@"%@com.carusd.videotask", NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject];
+        NSString *path = [NSString stringWithFormat:@"%@/com.carusd.videotask", NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject];
         
         [self setCacheDirURL:[NSURL fileURLWithPath:path]];
     }
@@ -72,8 +72,8 @@ NSString * const CDVideoDownloadDirURLDidChanged = @"CDVideoDownloadDirURLDidCha
 
 - (void)setCacheDirURL:(NSURL *)url {
     _cacheDirURL = url;
-    if (![[NSFileManager defaultManager] fileExistsAtPath:url.absoluteString]) {
-        [[NSFileManager defaultManager] createDirectoryAtPath:url.absoluteString withIntermediateDirectories:YES attributes:nil error:nil];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:url.relativePath]) {
+        [[NSFileManager defaultManager] createDirectoryAtPath:url.relativePath withIntermediateDirectories:YES attributes:nil error:nil];
     }
     [[NSNotificationCenter defaultCenter] postNotificationName:CDVideoDownloadDirURLDidChanged object:nil];
 }

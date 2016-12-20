@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "CDDownloadProtocol.h"
 #import <UIKit/UIKit.h>
+#import "CDVideoBlock.h"
 
 
 extern NSString * const CDVideoDownloadStateDidChangedNotif;
@@ -30,7 +31,7 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 @property (nonatomic) NSInteger priority;
 @property (nonatomic) long long offset;
 @property (nonatomic, readonly) int64_t totalBytes;
-@property (nonatomic, readonly) NSArray<NSValue *> *loadedVideoBlocks; // 表示已经下载的时间区间
+@property (nonatomic, readonly) NSArray<CDVideoBlock *> *loadedVideoBlocks; // 表示已经下载的时间区间
 @property (nonatomic, readonly) CGFloat progress;
 @property (nonatomic, readonly) NSArray<NSString *> *tags;
 @property (nonatomic, readonly) NSError *error;  // 当下载出错时，这里会记录出错原因。否则为nil

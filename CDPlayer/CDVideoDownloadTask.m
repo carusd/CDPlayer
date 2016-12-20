@@ -9,7 +9,7 @@
 #import "CDVideoDownloadTask.h"
 #import "AFNetworking.h"
 #import "CDVideoDownloadManager.h"
-#import "CDVideoBlock.h"
+
 
 
 NSString * const CDVideoDownloadStateDidChangedNotif = @"CDVideoDownloadStateDidChangedNotif";
@@ -29,7 +29,7 @@ NSString * const CDVideoDownloadTaskNotifTaskKey = @"CDVideoDownloadTaskNotifTas
 @property (nonatomic) CDVideoDownloadState state;
 @property (nonatomic, strong) NSError *error;
 
-@property (nonatomic, strong) NSMutableArray<NSValue *> *loadedBlocks;
+@property (nonatomic, strong) NSMutableArray<CDVideoBlock *> *loadedBlocks;
 @property (nonatomic) int64_t totalBytes;
 
 @property (nonatomic, strong) dispatch_queue_t cache_queue;
@@ -59,6 +59,8 @@ static long long VideoBlockSize = 100000; // in bytes
         self.videoURL = videoURL;
         self.localURL = localURL;
         self.taskURL = taskURL;
+        
+        
         
         self.priority = CDVideoDownloadTaskPriorityMedium;
         
@@ -142,7 +144,7 @@ static long long VideoBlockSize = 100000; // in bytes
 }
 
 - (void)save {
-    [NSKeyedArchiver archiveRootObject:self toFile:self.taskURL.absoluteString];
+    [NSKeyedArchiver archiveRootObject:self toFile:self.taskURL.relativePath];
 }
 
 - (void)prepare {
@@ -152,12 +154,12 @@ static long long VideoBlockSize = 100000; // in bytes
     
     self.error = nil;
     
-    if ([[NSFileManager defaultManager] fileExistsAtPath:self.localURL.absoluteString]) {
+    if ([[NSFileManager defaultManager] fileExistsAtPath:self.localURL.relativePath]) {
         [[NSFileManager defaultManager] removeItemAtURL:self.localURL error:nil];
     }
     
     
-    [[NSFileManager defaultManager] createFileAtPath:self.localURL.absoluteString contents:nil attributes:nil];
+    [[NSFileManager defaultManager] createFileAtPath:self.localURL.relativePath contents:nil attributes:nil];
     
     self.fileHandle = [NSFileHandle fileHandleForWritingAtPath:self.localURL.absoluteString];
     
@@ -171,10 +173,6 @@ static long long VideoBlockSize = 100000; // in bytes
         [self save];
         
         while (true) {
-            
-            NSValue *firstBlockValue = self.loadedBlocks.firstObject;
-            CDVideoBlock firstBlock = {0, 0};
-            [firstBlockValue getValue:&firstBlock];
             
             if (CDVideoDownloadStateLoading == self.state && (self.offset < self.totalBytes || self.totalBytes <= 0)) {
                 [self _loadBlock];
@@ -205,9 +203,7 @@ static long long VideoBlockSize = 100000; // in bytes
     if (self.loadedVideoBlocks.count != 1) {
         return NO;
     } else {
-        NSValue *blockValue = self.loadedVideoBlocks.lastObject;
-        CDVideoBlock block;
-        [blockValue getValue:&block];
+        CDVideoBlock *block = self.loadedVideoBlocks.lastObject;
         
         return block.length == self.totalBytes;
     }
@@ -219,10 +215,9 @@ static long long VideoBlockSize = 100000; // in bytes
 }
 
 - (CGFloat)progress {
-    __block CDVideoBlock block;
+    
     __block long long loadedLength = 0;
-    [self.loadedBlocks enumerateObjectsUsingBlock:^(NSValue *blockValue, NSUInteger idx, BOOL *stop) {
-        [blockValue getValue:&block];
+    [self.loadedBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *block, NSUInteger idx, BOOL *stop) {
         loadedLength += block.length;
     }];
     
@@ -232,33 +227,30 @@ static long long VideoBlockSize = 100000; // in bytes
     return ((loadedLength * 1.0) / self.totalBytes);
 }
 
-- (void)updateLoadedBlocksWithIncomingBlock:(CDVideoBlock)incomingBlock {
-    NSMutableArray<NSValue *> *updatedBlocks = [NSMutableArray array];
+- (void)updateLoadedBlocksWithIncomingBlock:(CDVideoBlock *)incomingBlock {
+    NSMutableArray<CDVideoBlock *> *updatedBlocks = [NSMutableArray array];
     
-    __block CDVideoBlock updatedBlock = incomingBlock;
-    __block NSValue *updatedBlockValue;
-    __block CDVideoBlock loadedBlock;
+    __block CDVideoBlock *updatedBlock = incomingBlock;
+    
     
     __block NSInteger mergedSuccessMark = 0;
     
     
     
     if (self.loadedBlocks.count <= 0) {
-        updatedBlockValue = [NSValue valueWithBytes:&incomingBlock objCType:@encode(CDVideoBlock)];
-        [updatedBlocks addObject:updatedBlockValue];
+        
+        [updatedBlocks addObject:updatedBlock];
     } else {
         __weak CDVideoDownloadTask *wself = self;
-        [self.loadedBlocks enumerateObjectsUsingBlock:^(NSValue *loadedBlockValue, NSUInteger idx, BOOL *stop) {
+        [self.loadedBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *loadedBlock, NSUInteger idx, BOOL *stop) {
             
-            [loadedBlockValue getValue:&loadedBlock];
+            CDVideoBlock *mergedBlock = [updatedBlock blockWithMergingBlock:loadedBlock];
             
-            CDVideoBlock mergedBlock = CDVideoBlockMerge(updatedBlock, loadedBlock);
-            if (!CDVideoBlockEqual(mergedBlock, CDVideoBlockZero)) {
-                updatedBlockValue = [NSValue valueWithBytes:&mergedBlock objCType:@encode(CDVideoBlock)];
+            if ([mergedBlock isValid]) {
                 updatedBlock = mergedBlock;
                 mergedSuccessMark++;
                 
-                [updatedBlocks addObject:updatedBlockValue];
+                [updatedBlocks addObject:updatedBlock];
             } else {
                 
                 if (mergedSuccessMark >= 1) {
@@ -267,19 +259,18 @@ static long long VideoBlockSize = 100000; // in bytes
                 } else {
                     
                     if (0 != idx) {
-                        NSValue *lastBlockValue = wself.loadedBlocks[idx - 1];
-                        CDVideoBlock lastBlock;
-                        [lastBlockValue getValue:&lastBlock];
-                        if (CDVideoBlockBetween(lastBlock, updatedBlock, loadedBlock)) {
-                            [updatedBlocks addObject:updatedBlockValue];
+                        
+                        
+                        CDVideoBlock *lastBlock = wself.loadedBlocks[idx - 1];
+                        if ([updatedBlock between:lastBlock and:loadedBlock]) {
+                            [updatedBlocks addObject:updatedBlock];
                         }
+                        
                     }
                     
-                    
-                    [updatedBlocks addObject:loadedBlockValue];
+                    [updatedBlocks addObject:loadedBlock];
                     if (wself.loadedBlocks.count - 1 == idx) {
-                        updatedBlockValue = [NSValue valueWithBytes:&incomingBlock objCType:@encode(CDVideoBlock)];
-                        [updatedBlocks addObject:updatedBlockValue];
+                        [updatedBlocks addObject:updatedBlock];
                     }
                 }
                 
@@ -288,7 +279,7 @@ static long long VideoBlockSize = 100000; // in bytes
             }
             
             if (mergedSuccessMark == 2) {
-                [updatedBlocks replaceObjectAtIndex:updatedBlocks.count - 1 withObject:updatedBlockValue];
+                [updatedBlocks replaceObjectAtIndex:updatedBlocks.count - 1 withObject:updatedBlock];
                 [updatedBlocks addObjectsFromArray:[wself.loadedBlocks subarrayWithRange:NSMakeRange(idx + 1, wself.loadedBlocks.count - 1 - (idx + 1))]];
                 *stop = YES;
                 
@@ -327,7 +318,8 @@ static long long VideoBlockSize = 100000; // in bytes
     [self.httpManager GET:self.videoURL.absoluteString parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
         
         
-        [wself updateLoadedBlocksWithIncomingBlock:CDVideoBlockMake(wself.offset, task.countOfBytesReceived)];
+        CDVideoBlock *incomingBlock = [[CDVideoBlock alloc] initWithOffset:wself.offset length:task.countOfBytesReceived];
+        [wself updateLoadedBlocksWithIncomingBlock:incomingBlock];
         
         [wself.fileHandle seekToFileOffset:wself.offset];
         [wself.fileHandle writeData:videoBlock];

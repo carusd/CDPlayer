@@ -139,8 +139,8 @@
         return task;
     }
     
-    NSString *filename = [[provider videoURL] lastPathComponent];
-    NSString *cacheDirPath = [self.persistenceManager.cacheDirURL absoluteString];
+    NSString *filename = [[[provider videoURL] lastPathComponent] stringByDeletingPathExtension];
+    NSString *cacheDirPath = [self.persistenceManager.cacheDirURL relativePath];
     NSURL *taskURL = [NSURL fileURLWithPath:[NSString stringWithFormat:@"%@/%@", cacheDirPath, filename]];
     task = [[CDVideoDownloadTask alloc] initWithURL:[provider videoURL] localURL:[provider localURL] taskURL:taskURL];
     task.label = [provider title];

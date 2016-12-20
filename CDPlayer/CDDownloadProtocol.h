@@ -17,7 +17,8 @@
 
 @property (readonly) BOOL completelyLoaded;
 @property (readonly) int64_t size; // 单位为byte
-
+@property (readonly) int64_t width;
+@property (readonly) int64_t height;
 @end
 
 

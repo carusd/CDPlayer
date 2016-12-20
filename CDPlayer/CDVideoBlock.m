@@ -10,33 +10,58 @@
 #import "CDVideoBlock.h"
 
 
+@implementation CDVideoBlock
 
-const CDVideoBlock CDVideoBlockZero = {0, 0};
-
-inline CDVideoBlock CDVideoBlockMake(long long offset, long long length) {
-    CDVideoBlock block = {offset, length};
-    return block;
+- (id)initWithCoder:(NSCoder *)aDecoder {
+    self = [super init];
+    if (self) {
+        self.offset = [aDecoder decodeInt64ForKey:@"offset"];
+        self.length = [aDecoder decodeInt64ForKey:@"length"];
+        
+    }
+    
+    return self;
+    
 }
 
-inline BOOL CDVideoBlockEqual(CDVideoBlock b1, CDVideoBlock b2) {
-    return (b1.offset == b2.offset && b1.length == b2.length);
+- (void)encodeWithCoder:(NSCoder *)aCoder {
+    [aCoder encodeInt64:self.offset forKey:@"offset"];
+    [aCoder encodeInt64:self.length forKey:@"length"];
 }
 
-inline BOOL CDVideoBlockContainsBlock(CDVideoBlock b1, CDVideoBlock b2) {
-    return (b1.offset <= b2.offset && b1.offset + b1.length >= b2.offset + b2.length);
+- (id)initWithOffset:(long long)offset length:(long long)length {
+    self = [super init];
+    if (self) {
+        self.offset = offset;
+        self.length = length;
+    }
+    
+    return self;
 }
 
-inline BOOL CDVideoBlockIntersect(CDVideoBlock b1, CDVideoBlock b2) {
-    if (b1.offset == b2.offset) {
+- (BOOL)isValid {
+    return self.offset >= 0 && self.length > 0;
+}
+
+- (BOOL)isBlockEqual:(CDVideoBlock *)b {
+    return (self.offset == b.offset && self.length == b.length);
+}
+
+- (BOOL)containsBlock:(CDVideoBlock *)b {
+    return (self.offset <= b.offset && self.offset + self.length >= b.offset + b.length);
+}
+
+- (BOOL)intersetWithBlock:(CDVideoBlock *)b {
+    if (self.offset == b.offset) {
         return YES;
-    } else if (b1.offset > b2.offset) {
-        if (b2.offset + b2.length >= b1.offset) {
+    } else if (self.offset > b.offset) {
+        if (b.offset + b.length >= self.offset) {
             return YES;
         } else {
             return NO;
         }
     } else {
-        if (b1.offset + b1.length >= b2.offset) {
+        if (self.offset + self.length >= b.offset) {
             return YES;
         } else {
             return NO;
@@ -44,24 +69,27 @@ inline BOOL CDVideoBlockIntersect(CDVideoBlock b1, CDVideoBlock b2) {
     }
 }
 
-inline CDVideoBlock CDVideoBlockMerge(CDVideoBlock b1, CDVideoBlock b2) {
-    CDVideoBlock result = {0, 0};
+- (CDVideoBlock *)blockWithMergingBlock:(CDVideoBlock *)b {
+    CDVideoBlock * result = [[CDVideoBlock alloc] init];
     
-    if (CDVideoBlockIntersect(b1, b2)) {
-        if (b1.offset == b2.offset) {
-            result.length = MAX(b1.length, b2.length);
-        } else if (b1.offset > b2.offset) {
-            result.offset = b2.offset;
-            result.length = b1.offset - b2.offset + b1.length;
+    if ([self intersetWithBlock:b]) {
+        if (self.offset == b.offset) {
+            result.length = MAX(self.length, b.length);
+        } else if (self.offset > b.offset) {
+            result.offset = b.offset;
+            result.length = self.offset - b.offset + self.length;
         } else {
-            result.offset = b1.offset;
-            result.length = b2.offset - b1.offset + b2.length;
+            result.offset = self.offset;
+            result.length = b.offset - self.offset + b.length;
         }
     }
     
     return result;
 }
 
-inline BOOL CDVideoBlockBetween(CDVideoBlock b1, CDVideoBlock b2, CDVideoBlock b3) {
-    return (b2.offset > b1.offset + b1.length && b2.offset + b2.length < b3.offset);
+- (BOOL)between:(CDVideoBlock *)b1 and:(CDVideoBlock *)b2 {
+    return (self.offset > b1.offset + b1.length && self.offset + self.length < b2.offset);
 }
+
+@end
+

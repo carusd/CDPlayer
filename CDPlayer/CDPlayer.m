@@ -28,13 +28,11 @@
 
 @property (nonatomic, strong) id<CDVideoDownloadTaskDispatcher> dispatcher;
 
-@property (nonatomic, strong) NSMutableArray<AVAssetResourceLoadingDataRequest *> *requests;
+@property (nonatomic, strong) NSMutableArray<AVAssetResourceLoadingRequest *> *requests;
 
 @end
 
 @implementation CDPlayer
-
-
 
 - (void)dealloc {
     [self.fileHandle closeFile];
@@ -53,11 +51,13 @@
             self.asset = [AVURLAsset assetWithURL:self.task.localURL];
             self.fromLocalFile = YES;
         } else {
-            self.asset = [AVURLAsset assetWithURL:self.task.videoURL];
+            NSURLComponents *videoURLComponents = [[NSURLComponents alloc] initWithURL:self.task.videoURL resolvingAgainstBaseURL:NO];
+            videoURLComponents.scheme = @"streaming";
+            self.asset = [AVURLAsset assetWithURL:videoURLComponents.URL];
             [self.asset.resourceLoader setDelegate:self queue:dispatch_get_main_queue()];
             
-            
             self.fileHandle = [NSFileHandle fileHandleForReadingFromURL:self.task.localURL error:nil];
+            
             self.fromLocalFile = NO;
         }
         
@@ -65,6 +65,7 @@
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
         
         self.player = [AVPlayer playerWithPlayerItem:self.playerItem];
+        
         
         self.requests = [NSMutableArray array];
         
@@ -116,14 +117,13 @@
     __block BOOL found = NO;
     
     __weak CDPlayer *wself = self;
-    [self.task.loadedVideoBlocks enumerateObjectsUsingBlock:^(NSValue *blockValue, NSUInteger idx, BOOL *stop) {
+    [self.task.loadedVideoBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *videoBlock, NSUInteger idx, BOOL *stop) {
         
-        CDVideoBlock videoBlock;
-        [blockValue getValue:&videoBlock];
         
-        CDVideoBlock requestedBlock = {loadingRequest.dataRequest.requestedOffset, loadingRequest.dataRequest.requestedLength};
+        CDVideoBlock *requestedBlock = [[CDVideoBlock alloc] initWithOffset:loadingRequest.dataRequest.requestedOffset length:loadingRequest.dataRequest.requestedLength];
         
-        if (CDVideoBlockContainsBlock(videoBlock, requestedBlock)) {
+        
+        if ([videoBlock containsBlock:requestedBlock]) {
             found = YES;
             
             [wself.fileHandle seekToFileOffset:loadingRequest.dataRequest.requestedOffset];
