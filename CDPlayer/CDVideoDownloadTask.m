@@ -311,7 +311,7 @@ static long long _VideoBlockSize = 500000; // in bytes
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
-//    NSLog(@"%@ requesting %@, with range %@", self, self.videoURL.absoluteString, range);
+    NSLog(@"%@ requesting %@, with range %@", self, self.videoURL.absoluteString, range);
     [self.httpManager GET:self.videoURL.absoluteString parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
         
         
@@ -326,14 +326,14 @@ static long long _VideoBlockSize = 500000; // in bytes
         NSArray *values = [contentRange componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@" /"]];
         NSString *totalBytesNum = values.lastObject;
         wself.totalBytes = totalBytesNum.longLongValue;
-//        NSLog(@"%@ response with range %@", self, contentRange);
+        NSLog(@"%@ response with range %@", self, contentRange);
         
         [wself save];
         
         
         dispatch_semaphore_signal(semaphore);
     } failure:^(NSURLSessionDataTask *task, NSError *e) {
-//        NSLog(@"%@ response with error  %@", self, e);
+        NSLog(@"%@ response with error  %@", self, e);
         [wself loadError];
         wself.error = e;
         

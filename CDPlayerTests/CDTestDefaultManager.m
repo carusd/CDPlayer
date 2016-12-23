@@ -70,6 +70,8 @@
             break;
         }
     }
+    
+    XCTAssert(task.completelyLoaded);
 }
 
 - (void)testPause {

@@ -38,6 +38,7 @@
 - (void)dealloc {
     [self.fileHandle closeFile];
     [self.asset.resourceLoader setDelegate:nil queue:dispatch_get_main_queue()];
+    
 }
 
 - (id)initWithInfo:(id<CDVideoInfoProvider>)infoProvider {
