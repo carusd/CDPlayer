@@ -51,4 +51,5 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 
 
 + (void)setVideoBlockSize:(long long)size;
++ (long long)VideoBlockSize;
 @end

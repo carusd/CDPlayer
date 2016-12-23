@@ -91,5 +91,9 @@
     return (self.offset > b1.offset + b1.length && self.offset + self.length < b2.offset);
 }
 
+- (NSString *)description {
+    return [NSString stringWithFormat:@"offset: %lld, length: %lld", self.offset, self.length];
+}
+
 @end
 

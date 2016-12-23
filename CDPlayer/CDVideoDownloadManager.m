@@ -81,6 +81,9 @@
 // 普通优先级的任务只允许maxConcurrentNum个并行，最高优先级(Immediate)只允许一个并行
 // 实际上，是3+1个并行
 - (void)tryToStartTask:(CDVideoDownloadTask *)task {
+    if (CDVideoDownloadStateLoading == task.state || CDVideoDownloadStateLoaded == task.state || CDVideoDownloadStateFinished == task.state) {
+        return;
+    }
     if (self.loadingTasks.count < self.maxConcurrentNum) {
         [task load];
         

@@ -46,12 +46,14 @@ NSString * const CDVideoDownloadTaskNotifTaskKey = @"CDVideoDownloadTaskNotifTas
 @synthesize size;
 @synthesize duration;
 
-static long long VideoBlockSize = 100000; // in bytes
+static long long _VideoBlockSize = 500000; // in bytes
 + (void)setVideoBlockSize:(long long)size {
-    VideoBlockSize = size;
+    _VideoBlockSize = size;
 }
 
-
++ (long long)VideoBlockSize {
+    return _VideoBlockSize;
+}
 
 - (id)initWithURL:(NSURL *)videoURL localURL:(NSURL *)localURL taskURL:(NSURL *)taskURL {
     self = [super init];
@@ -161,7 +163,7 @@ static long long VideoBlockSize = 100000; // in bytes
     
     [[NSFileManager defaultManager] createFileAtPath:self.localURL.relativePath contents:nil attributes:nil];
     
-    self.fileHandle = [NSFileHandle fileHandleForWritingAtPath:self.localURL.absoluteString];
+    self.fileHandle = [NSFileHandle fileHandleForWritingAtPath:self.localURL.relativePath];
     
     [self save];
 }
@@ -221,7 +223,7 @@ static long long VideoBlockSize = 100000; // in bytes
         loadedLength += block.length;
     }];
     
-    NSLog(@"offset %lld, loaded length %lld", self.offset, loadedLength);
+//    NSLog(@"offset %lld, loaded length %lld", self.offset, loadedLength);
     
     
     return ((loadedLength * 1.0) / self.totalBytes);
@@ -260,7 +262,6 @@ static long long VideoBlockSize = 100000; // in bytes
                     
                     if (0 != idx) {
                         
-                        
                         CDVideoBlock *lastBlock = wself.loadedBlocks[idx - 1];
                         if ([updatedBlock between:lastBlock and:loadedBlock]) {
                             [updatedBlocks addObject:updatedBlock];
@@ -274,17 +275,13 @@ static long long VideoBlockSize = 100000; // in bytes
                     }
                 }
                 
-                
-                
             }
             
             if (mergedSuccessMark == 2) {
                 [updatedBlocks replaceObjectAtIndex:updatedBlocks.count - 1 withObject:updatedBlock];
                 [updatedBlocks addObjectsFromArray:[wself.loadedBlocks subarrayWithRange:NSMakeRange(idx + 1, wself.loadedBlocks.count - 1 - (idx + 1))]];
                 *stop = YES;
-                
             }
-            
         }];
     }
     
@@ -298,11 +295,11 @@ static long long VideoBlockSize = 100000; // in bytes
     requestSerializer.cachePolicy = NSURLRequestReloadIgnoringCacheData;
     
     NSString *range = nil;
-    if (self.totalBytes - self.offset < VideoBlockSize * 2) {
+    if (self.totalBytes - self.offset < _VideoBlockSize * 2) {
         // 剩下不多的话，一次过全部拿回来了
         range = [NSString stringWithFormat:@"bytes=%lld-%lld", self.offset, self.totalBytes];
     } else {
-        range = [NSString stringWithFormat:@"bytes=%lld-%lld", self.offset, self.offset + VideoBlockSize];
+        range = [NSString stringWithFormat:@"bytes=%lld-%lld", self.offset, self.offset + _VideoBlockSize];
     }
     
     
@@ -314,14 +311,14 @@ static long long VideoBlockSize = 100000; // in bytes
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
-    NSLog(@"%@ requesting %@, with range %@", self, self.videoURL.absoluteString, range);
+//    NSLog(@"%@ requesting %@, with range %@", self, self.videoURL.absoluteString, range);
     [self.httpManager GET:self.videoURL.absoluteString parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
         
         
         CDVideoBlock *incomingBlock = [[CDVideoBlock alloc] initWithOffset:wself.offset length:task.countOfBytesReceived];
         [wself updateLoadedBlocksWithIncomingBlock:incomingBlock];
         
-        [wself.fileHandle seekToFileOffset:wself.offset];
+//        [wself.fileHandle seekToFileOffset:wself.offset];
         [wself.fileHandle writeData:videoBlock];
         wself.offset += task.countOfBytesReceived;
         NSHTTPURLResponse *response = (NSHTTPURLResponse *)task.response;
@@ -329,14 +326,14 @@ static long long VideoBlockSize = 100000; // in bytes
         NSArray *values = [contentRange componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@" /"]];
         NSString *totalBytesNum = values.lastObject;
         wself.totalBytes = totalBytesNum.longLongValue;
-        NSLog(@"%@ response with range %@", self, contentRange);
+//        NSLog(@"%@ response with range %@", self, contentRange);
         
         [wself save];
         
         
         dispatch_semaphore_signal(semaphore);
     } failure:^(NSURLSessionDataTask *task, NSError *e) {
-        NSLog(@"%@ response with error  %@", self, e);
+//        NSLog(@"%@ response with error  %@", self, e);
         [wself loadError];
         wself.error = e;
         
@@ -348,6 +345,11 @@ static long long VideoBlockSize = 100000; // in bytes
     if (self.handleDownloadProgress) {
         self.handleDownloadProgress([self progress]);
     }
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[NSNotificationCenter defaultCenter] postNotificationName:CDVideoDownloadTaskDidHasNewBlockNotif object:nil userInfo:@{CDVideoDownloadTaskNotifTaskKey: self}];
+    });
+    
     
     return;
 }
