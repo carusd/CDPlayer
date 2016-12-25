@@ -46,7 +46,7 @@ NSString * const CDVideoDownloadTaskNotifTaskKey = @"CDVideoDownloadTaskNotifTas
 @synthesize size;
 @synthesize duration;
 
-static long long _VideoBlockSize = 500000; // in bytes
+static long long _VideoBlockSize = 100000; // in bytes
 + (void)setVideoBlockSize:(long long)size {
     _VideoBlockSize = size;
 }
@@ -225,8 +225,12 @@ static long long _VideoBlockSize = 500000; // in bytes
     
 //    NSLog(@"offset %lld, loaded length %lld", self.offset, loadedLength);
     
+    if (0 == self.totalBytes) {
+        return self.totalBytes;
+    } else {
+        return ((loadedLength * 1.0) / self.totalBytes);
+    }
     
-    return ((loadedLength * 1.0) / self.totalBytes);
 }
 
 - (void)updateLoadedBlocksWithIncomingBlock:(CDVideoBlock *)incomingBlock {

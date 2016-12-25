@@ -18,8 +18,12 @@
 @property (nonatomic, readonly) AVPlayer *player;
 @property (nonatomic, readonly) CDPlayerState state;
 
+@property (nonatomic, readonly) NSError *error;
+
 @property (nonatomic) BOOL loop;
 @property (nonatomic ,readonly) BOOL fromLocalFile;
+
+@property (nonatomic) BOOL playOnWhileKeepUp;
 
 @property (nonatomic, readonly) CDVideoDownloadTask *task;
 

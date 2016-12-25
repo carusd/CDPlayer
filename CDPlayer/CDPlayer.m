@@ -21,6 +21,8 @@
 @property (nonatomic, strong) AVPlayerItem *playerItem;
 @property (nonatomic) CDPlayerState state;
 
+@property (nonatomic, strong) NSError *error;
+
 @property (nonatomic) BOOL fromLocalFile;
 
 @property (nonatomic, strong) CDVideoDownloadTask *task;
@@ -39,6 +41,11 @@
     [self.fileHandle closeFile];
     [self.asset.resourceLoader setDelegate:nil queue:dispatch_get_main_queue()];
     
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [self.playerItem removeObserver:self forKeyPath:@"status"];
+    [self.playerItem removeObserver:self forKeyPath:@"playbackBufferEmpty"];
+    [self.playerItem removeObserver:self forKeyPath:@"playbackLikelyToKeepUp"];
 }
 
 - (id)initWithInfo:(id<CDVideoInfoProvider>)infoProvider {
@@ -68,13 +75,14 @@
         self.player = [AVPlayer playerWithPlayerItem:self.playerItem];
         self.player.automaticallyWaitsToMinimizeStalling = NO;
         
+        self.playOnWhileKeepUp = YES;
         
         self.requests = [NSMutableArray array];
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleTaskDidHasNewBlock:) name:CDVideoDownloadTaskDidHasNewBlockNotif object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleTaskStateDidChanged:) name:CDVideoDownloadStateDidChangedNotif object:nil];
         
         [self.playerItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:nil];
-        [self.playerItem addObserver:self forKeyPath:@"loadedTimeRanges" options:NSKeyValueObservingOptionNew context:nil];
         [self.playerItem addObserver:self forKeyPath:@"playbackBufferEmpty" options:NSKeyValueObservingOptionNew context:nil];
         [self.playerItem addObserver:self forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:nil];
         
@@ -91,19 +99,50 @@
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
     
     if ([keyPath isEqualToString:@"status"]) {
-        switch (self.playerItem.status) {
-            case AVPlayerItemStatusReadyToPlay:
-                [self.player play];
-                break;
-            case AVPlayerItemStatusFailed:
-            case AVPlayerItemStatusUnknown:
-            default:
-                break;
-        }
+//        switch (self.playerItem.status) {
+//            case AVPlayerItemStatusReadyToPlay:
+//                [self.player play];
+//                break;
+//            case AVPlayerItemStatusFailed:
+//            case AVPlayerItemStatusUnknown:
+//            default:
+//                break;
+//        }
     } else if ([keyPath isEqualToString:@"playbackLikelyToKeepUp"]) {
-        [self.player play];
+        if (self.playerItem.playbackLikelyToKeepUp) {
+            if (self.playOnWhileKeepUp) {
+                self.state = CDPlayerStatePlaying;
+            }
+            
+        } else {
+            if (CDVideoDownloadStateLoading == self.task.state) {
+                self.state = CDPlayerStateBuffering;
+            }
+        }
+        
+        
     } else if ([keyPath isEqualToString:@"playbackBufferEmpty"]) {
-        [self.player pause];
+        if (self.task.state == CDVideoDownloadStateLoading) {
+            self.state = CDPlayerStateBuffering;
+        } else if (self.task.state == CDVideoDownloadStateLoadError) {
+            // 下载途中失败之后，播放器还是继续在播放，这个时候不应该就马上显示错误
+            // 而是继续播放，直到playbackBufferEmpty为真，这个时候还是不应该马上
+            // 显示错误。而是尝试重新下载，重新下载还是失败，在handleTaskStateDidChanged
+            // 中处理
+            [self.task load];
+            self.state = CDPlayerStateBuffering;
+        }
+        
+    }
+}
+
+- (void)handleTaskStateDidChanged:(NSNotification *)notif {
+    if (self.task == notif.userInfo[CDVideoDownloadTaskNotifTaskKey]) {
+        if (CDVideoDownloadStateLoadError == self.task.state && CDPlayerStateBuffering == self.state) {
+            // 重试重连之后失败，这里该提示用户错误了
+            self.state = CDPlayerStateError;
+            self.error = self.task.error;
+        }
     }
 }
 
@@ -120,6 +159,11 @@
         
         [self.requests removeObjectsInArray:completedRequests];
         
+        
+        if (self.playerItem.isPlaybackLikelyToKeepUp && CDPlayerStateBuffering == self.state) {
+            [self.player play];
+            self.state = CDPlayerStatePlaying;
+        }
     }
 }
 
@@ -131,7 +175,11 @@
         [self.dispatcher tryToStartTask:self.task];
     }
     [self.player play];
+    self.state = CDPlayerStatePlaying;
     
+    if (!self.playerItem.playbackLikelyToKeepUp && CDVideoDownloadStateLoading == self.task.state) {
+        self.state = CDPlayerStateBuffering;
+    }
     
 }
 
@@ -147,6 +195,8 @@
     if (self.loop) {
         [self.playerItem seekToTime:kCMTimeZero];
         [self.player play];
+    } else {
+        self.state = CDPlayerStateStop;
     }
     
     
