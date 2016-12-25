@@ -74,6 +74,8 @@ typedef enum : NSUInteger {
 
 typedef enum : NSUInteger {
     CDPlayerStatePlaying,
+    CDPlayerStateError,
+    CDPlayerStatePause,
     CDPlayerStateStop,
     CDPlayerStateBuffering
 } CDPlayerState;
