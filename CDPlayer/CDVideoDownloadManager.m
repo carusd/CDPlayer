@@ -145,7 +145,8 @@
     NSString *filename = [[[provider videoURL] lastPathComponent] stringByDeletingPathExtension];
     NSString *cacheDirPath = [self.persistenceManager.cacheDirURL relativePath];
     NSURL *taskURL = [NSURL fileURLWithPath:[NSString stringWithFormat:@"%@/%@", cacheDirPath, filename]];
-    task = [[CDVideoDownloadTask alloc] initWithURL:[provider videoURL] localURL:[provider localURL] taskURL:taskURL];
+    
+    task = [[CDVideoDownloadTask alloc] initWithVideoInfoProvider:provider taskURL:taskURL];
     task.label = [provider title];
     [task addTag:self.tag];
     

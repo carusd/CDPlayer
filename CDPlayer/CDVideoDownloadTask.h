@@ -23,7 +23,7 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 
 
 
-- (id)initWithURL:(NSURL *)videoURL localURL:(NSURL *)localURL taskURL:(NSURL *)taskURL;
+- (id)initWithVideoInfoProvider:(id<CDVideoInfoProvider>)provider taskURL:(NSURL *)taskURL;
 
 
 @property (nonatomic, readonly) NSURL *taskURL;
@@ -39,6 +39,7 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 @property (nonatomic, copy) HandleDownloadProgress handleDownloadProgress;
 @property (nonatomic, copy) NSString *label; // 调试用，默认为视频title
 
+@property (nonatomic, readonly) id<CDVideoInfoProvider> infoProvider;
 
 - (void)addTag:(NSString *)tag;
 - (void)removeTag:(NSString *)tag;

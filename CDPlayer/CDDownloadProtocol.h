@@ -6,16 +6,17 @@
 //  Copyright © 2016年 carusd. All rights reserved.
 //
 
-@protocol CDVideoInfoProvider <NSObject>
+@protocol CDVideoInfoProvider <NSObject, NSCoding>
 
 @property (readonly) NSURL *videoURL;
 @property (readonly) NSURL *localURL;
 @property (readonly) NSInteger duration; // 单位为秒
-@property (readonly, copy) NSString *title;
+@property (readonly) BOOL completelyLoaded;
 
 @optional
 
-@property (readonly) BOOL completelyLoaded;
+
+@property (readonly, copy) NSString *title;
 @property (readonly) int64_t size; // 单位为byte
 @property (readonly) int64_t width;
 @property (readonly) int64_t height;

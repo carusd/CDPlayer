@@ -30,6 +30,8 @@
 - (void)play;
 - (void)pause;
 
+- (void)continueToBuffer; // 因为错误被迫停止，需要重新开始加载的时候，调用这个方法
+
 - (void)seekToPosition:(double)position;
 
 @end

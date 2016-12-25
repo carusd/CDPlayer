@@ -39,6 +39,7 @@ NSString * const CDVideoDownloadTaskNotifTaskKey = @"CDVideoDownloadTaskNotifTas
 
 @property (nonatomic, strong) NSMutableArray *taskTags;
 
+@property (nonatomic, strong) id<CDVideoInfoProvider> infoProvider;
 @end
 
 @implementation CDVideoDownloadTask
@@ -55,14 +56,14 @@ static long long _VideoBlockSize = 100000; // in bytes
     return _VideoBlockSize;
 }
 
-- (id)initWithURL:(NSURL *)videoURL localURL:(NSURL *)localURL taskURL:(NSURL *)taskURL {
+- (id)initWithVideoInfoProvider:(id<CDVideoInfoProvider>)provider taskURL:(NSURL *)taskURL {
     self = [super init];
     if (self) {
-        self.videoURL = videoURL;
-        self.localURL = localURL;
+        self.infoProvider = provider;
+        
+        self.videoURL = provider.videoURL;
+        self.localURL = provider.localURL;
         self.taskURL = taskURL;
-        
-        
         
         self.priority = CDVideoDownloadTaskPriorityMedium;
         
@@ -86,6 +87,8 @@ static long long _VideoBlockSize = 100000; // in bytes
 }
 
 
+
+
 - (id)initWithCoder:(NSCoder *)aDecoder {
     self = [super init];
     if (self) {
@@ -104,6 +107,8 @@ static long long _VideoBlockSize = 100000; // in bytes
         self.taskTags = [aDecoder decodeObjectForKey:@"tags"];
         self.error = [aDecoder decodeObjectForKey:@"error"];
         self.label = [aDecoder decodeObjectForKey:@"label"];
+        
+        self.infoProvider = [aDecoder decodeObjectForKey:@"infoProvider"];
         
         self.cache_queue = dispatch_queue_create([[self.videoURL absoluteString] UTF8String], DISPATCH_QUEUE_CONCURRENT);
         
@@ -130,6 +135,7 @@ static long long _VideoBlockSize = 100000; // in bytes
     [aCoder encodeObject:self.taskTags forKey:@"taskTags"];
     [aCoder encodeObject:self.error forKey:@"error"];
     [aCoder encodeObject:self.label forKey:@"label"];
+    [aCoder encodeObject:self.infoProvider forKey:@"infoProvider"];
     
 }
 
@@ -299,7 +305,7 @@ static long long _VideoBlockSize = 100000; // in bytes
     requestSerializer.cachePolicy = NSURLRequestReloadIgnoringCacheData;
     
     NSString *range = nil;
-    if (self.totalBytes - self.offset < _VideoBlockSize * 2) {
+    if (self.totalBytes > 0 && self.totalBytes - self.offset < _VideoBlockSize * 2) {
         // 剩下不多的话，一次过全部拿回来了
         range = [NSString stringWithFormat:@"bytes=%lld-%lld", self.offset, self.totalBytes];
     } else {
