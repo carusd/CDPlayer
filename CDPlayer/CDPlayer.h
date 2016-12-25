@@ -8,7 +8,7 @@
 
 #import "CDDownloadProtocol.h"
 #import <AVFoundation/AVFoundation.h>
-
+#import "CDVideoDownloadTask.h"
 
 
 @interface CDPlayer : NSObject
@@ -21,6 +21,7 @@
 @property (nonatomic) BOOL loop;
 @property (nonatomic ,readonly) BOOL fromLocalFile;
 
+@property (nonatomic, readonly) CDVideoDownloadTask *task;
 
 - (void)play;
 - (void)pause;
