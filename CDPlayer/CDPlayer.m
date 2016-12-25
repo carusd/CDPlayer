@@ -202,6 +202,10 @@
     [self.playerItem seekToTime:CMTimeMakeWithSeconds(seekTime, self.playerItem.currentTime.timescale)];
 }
 
+- (void)seekToTime:(CMTime)time {
+    [self.playerItem seekToTime:time];
+}
+
 - (void)moviePlayDidEnd:(NSNotification *)notif {
     if (self.loop) {
         [self.playerItem seekToTime:kCMTimeZero];
