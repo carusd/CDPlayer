@@ -10,6 +10,14 @@
 #import "CDVideoBlock.h"
 
 
+@implementation CDVideoNormalizedBlock
+
+- (NSString *)description {
+    return [NSString stringWithFormat:@"offset: %f, length: %f", self.offset, self.length];
+}
+
+@end
+
 @implementation CDVideoBlock
 
 - (id)initWithCoder:(NSCoder *)aDecoder {
@@ -49,6 +57,10 @@
 
 - (BOOL)containsBlock:(CDVideoBlock *)b {
     return (self.offset <= b.offset && self.offset + self.length >= b.offset + b.length);
+}
+
+- (BOOL)containsPosition:(long long)position {
+    return (self.offset <= position && position <= self.offset + self.length);
 }
 
 - (BOOL)intersetWithBlock:(CDVideoBlock *)b {

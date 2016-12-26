@@ -40,6 +40,8 @@ NSString * const CDVideoDownloadTaskNotifTaskKey = @"CDVideoDownloadTaskNotifTas
 @property (nonatomic, strong) NSMutableArray *taskTags;
 
 @property (nonatomic, strong) id<CDVideoInfoProvider> infoProvider;
+
+@property (nonatomic) long long nextOffset; // 下一次下载，从这里开始
 @end
 
 @implementation CDVideoDownloadTask
@@ -181,7 +183,7 @@ static long long _VideoBlockSize = 100000; // in bytes
         [self save];
         
         while (true) {
-            
+            self.offset = [self popOffset];
             if (CDVideoDownloadStateLoading == self.state && (self.offset < self.totalBytes || self.totalBytes <= 0)) {
                 [self _loadBlock];
             } else {
@@ -217,9 +219,26 @@ static long long _VideoBlockSize = 100000; // in bytes
     }
 }
 
-- (NSArray *)loadedVideoBlocks {
+- (NSArray<CDVideoBlock *> *)loadedVideoBlocks {
     // 调用者可能使用这个数组做迭代，如果迭代的过程中数组也有update就会导致崩溃，因此这里用了copy
     return [self.loadedBlocks copy];
+}
+
+- (NSArray<CDVideoNormalizedBlock *> *)loadedVideoRanges {
+    if (0 == self.totalBytes) {
+        return nil;
+    }
+    NSArray *videoblocks = [self loadedVideoBlocks];
+    NSMutableArray *result = [NSMutableArray array];
+    [videoblocks enumerateObjectsUsingBlock:^(CDVideoBlock *videoBlock, NSUInteger idx, BOOL *stop) {
+        CDVideoNormalizedBlock *nVideoBlock = [[CDVideoNormalizedBlock alloc] init];
+        nVideoBlock.offset = videoBlock.offset * 1.0 / self.totalBytes;
+        nVideoBlock.length = videoBlock.length * 1.0 / self.totalBytes;
+        
+        [result addObject:nVideoBlock];
+    }];
+    
+    return [result copy];
 }
 
 - (CGFloat)progress {
@@ -321,14 +340,16 @@ static long long _VideoBlockSize = 100000; // in bytes
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
-    NSLog(@"%@ requesting %@, with range %@", self, self.videoURL.absoluteString, range);
+//    NSLog(@"%@ requesting %@, with range %@", self, self.videoURL.absoluteString, range);
     [self.httpManager GET:self.videoURL.absoluteString parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
         
         
         CDVideoBlock *incomingBlock = [[CDVideoBlock alloc] initWithOffset:wself.offset length:task.countOfBytesReceived];
         [wself updateLoadedBlocksWithIncomingBlock:incomingBlock];
         
-//        [wself.fileHandle seekToFileOffset:wself.offset];
+        [wself.fileHandle seekToFileOffset:wself.offset];
+//        NSLog(@"task offset %lld", wself.offset);
+//        NSLog(@"file offset %lld", wself.fileHandle.offsetInFile);
         [wself.fileHandle writeData:videoBlock];
         wself.offset += task.countOfBytesReceived;
         NSHTTPURLResponse *response = (NSHTTPURLResponse *)task.response;
@@ -336,14 +357,14 @@ static long long _VideoBlockSize = 100000; // in bytes
         NSArray *values = [contentRange componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@" /"]];
         NSString *totalBytesNum = values.lastObject;
         wself.totalBytes = totalBytesNum.longLongValue;
-        NSLog(@"%@ response with range %@", self, contentRange);
+//        NSLog(@"%@ response with range %@", self, contentRange);
         
         [wself save];
         
         
         dispatch_semaphore_signal(semaphore);
     } failure:^(NSURLSessionDataTask *task, NSError *e) {
-        NSLog(@"%@ response with error  %@", self, e);
+//        NSLog(@"%@ response with error  %@", self, e);
         [wself loadError];
         wself.error = e;
         
@@ -362,6 +383,21 @@ static long long _VideoBlockSize = 100000; // in bytes
     
     
     return;
+}
+
+- (void)pushOffset:(long long)offset {
+    self.nextOffset = offset;
+}
+
+- (long long)popOffset {
+    if (0 == self.nextOffset) {
+        return self.offset;
+    } else {
+        long long result = self.nextOffset;
+        self.nextOffset = 0;
+        return result;
+    }
+    
 }
 
 - (void)loadError {

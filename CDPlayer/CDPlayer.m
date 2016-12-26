@@ -159,11 +159,13 @@
         
         [self.requests removeObjectsInArray:completedRequests];
         
-        
-        if (self.playerItem.isPlaybackLikelyToKeepUp && CDPlayerStateBuffering == self.state) {
+        if (CDPlayerStateBuffering == self.state) {
             [self.player play];
-            self.state = CDPlayerStatePlaying;
+            if (self.playerItem.isPlaybackLikelyToKeepUp) {
+                self.state = CDPlayerStatePlaying;
+            }
         }
+        
     }
 }
 
@@ -196,10 +198,16 @@
 - (void)seekToPosition:(double)position {
     NSInteger seekTime = [self.task.infoProvider duration] * position;
     
-    NSLog(@"position %f", position);
-    NSLog(@"seek time %ld", seekTime);
-    
     [self.playerItem seekToTime:CMTimeMakeWithSeconds(seekTime, self.playerItem.currentTime.timescale)];
+    
+    // 寻找目标位置的数据是否已经下载完，没有的话需要将task.offset定位到这个地方，从这里开始下载
+    long long bytesOffset = self.task.totalBytes * position;
+    [self.task.loadedVideoBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *videoBlock, NSUInteger idx, BOOL *stop) {
+        if (![videoBlock containsPosition:bytesOffset]) {
+            [self.task pushOffset:MAX(0, bytesOffset - 10)];// 往前边挪一边，保证最左边的数据完整
+            
+        }
+    }];
 }
 
 - (void)seekToTime:(CMTime)time {
@@ -240,8 +248,8 @@
         }
         
         CDVideoBlock *requestedBlock = [[CDVideoBlock alloc] initWithOffset:startOffset length:readingDataLength];
-        
         if ([videoBlock containsBlock:requestedBlock]) {
+            
             found = YES;
             
             [wself.fileHandle seekToFileOffset:startOffset];
@@ -250,9 +258,6 @@
             [loadingRequest.dataRequest respondWithData:requestedData];
             [loadingRequest finishLoading];
             *stop = YES;
-        } else {
-            NSLog(@"video block %@", videoBlock);
-            NSLog(@"requested block %@", requestedBlock);
         }
         
     }];
@@ -268,11 +273,6 @@
     BOOL fed = [self tryToFeedRequest:loadingRequest];
     
     if (!fed) {
-//        if (loadingRequest.dataRequest.requestedOffset > 0) {
-//            self.task.offset = loadingRequest.dataRequest.requestedOffset;
-//        }
-        
-        
         [self.requests addObject:loadingRequest];
     }
     

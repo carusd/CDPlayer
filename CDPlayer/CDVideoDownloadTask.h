@@ -32,6 +32,7 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 @property (nonatomic) long long offset;
 @property (nonatomic, readonly) int64_t totalBytes;
 @property (nonatomic, readonly) NSArray<CDVideoBlock *> *loadedVideoBlocks; // 表示已经下载的时间区间
+@property (nonatomic, readonly) NSArray<CDVideoNormalizedBlock *> *loadedVideoRanges; //同上，但是这是正则化表示，范围是0-1
 @property (nonatomic, readonly) CGFloat progress;
 @property (nonatomic, readonly) NSArray<NSString *> *tags;
 @property (nonatomic, readonly) NSError *error;  // 当下载出错时，这里会记录出错原因。否则为nil
@@ -49,6 +50,8 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 - (void)pause;
 
 - (void)destroy; // 删除视频文件，但是不会删除task文件，因为task事实上不能脱离manager存在，他应该被manager管理
+
+- (void)pushOffset:(long long)offset;
 
 
 + (void)setVideoBlockSize:(long long)size;

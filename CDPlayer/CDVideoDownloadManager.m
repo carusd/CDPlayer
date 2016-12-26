@@ -108,6 +108,16 @@
     if (![self.tasks containsObject:task]) {
         [self.tasks addObject:task];
         [self.persistenceManager addTask:task];
+        
+        
+        // 自动清理
+        if (self.tasks.count > 30) {
+            CDVideoDownloadTask *lastTask = self.tasks.lastObject;
+            [lastTask destroy];
+            [self.persistenceManager removeTask:lastTask];
+            [self removeTask:lastTask];
+        }
+        
     }
 }
 

@@ -9,6 +9,14 @@
 #ifndef CDVideoBlock_h
 #define CDVideoBlock_h
 
+@interface CDVideoNormalizedBlock : NSObject
+
+@property double offset;
+@property double length;
+
+@end
+
+
 
 @interface CDVideoBlock : NSObject<NSCoding>
 
@@ -20,6 +28,7 @@
 - (BOOL)isValid;
 - (BOOL)isBlockEqual:(CDVideoBlock *)b;
 - (BOOL)containsBlock:(CDVideoBlock *)b;
+- (BOOL)containsPosition:(long long)position;
 - (BOOL)intersetWithBlock:(CDVideoBlock *)b;
 - (CDVideoBlock *)blockWithMergingBlock:(CDVideoBlock *)b;
 - (BOOL)between:(CDVideoBlock *)b1 and:(CDVideoBlock *)b2;
