@@ -106,7 +106,7 @@ static long long _VideoBlockSize = 100000; // in bytes
         self.offset = [aDecoder decodeInt64ForKey:@"offset"];
         self.totalBytes = [aDecoder decodeInt64ForKey:@"totalBytes"];
         self.loadedBlocks = [aDecoder decodeObjectForKey:@"loadedBlocks"];
-        self.taskTags = [aDecoder decodeObjectForKey:@"tags"];
+        self.taskTags = [aDecoder decodeObjectForKey:@"taskTags"];
         self.error = [aDecoder decodeObjectForKey:@"error"];
         self.label = [aDecoder decodeObjectForKey:@"label"];
         
@@ -139,6 +139,18 @@ static long long _VideoBlockSize = 100000; // in bytes
     [aCoder encodeObject:self.label forKey:@"label"];
     [aCoder encodeObject:self.infoProvider forKey:@"infoProvider"];
     
+}
+
+- (long long)sizeInDisk {
+    NSError *e = nil;
+    NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:self.localURL.relativePath error:&e];
+    NSLog(@"eeeeeeeeeee  %@", e);
+    long long fileSize = [fileAttributes[NSFileSize] longLongValue];
+    
+    NSDictionary *taskAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:self.taskURL.relativePath error:nil];
+    long long taskSize = [taskAttributes[NSFileSize] longLongValue];
+    
+    return fileSize + taskSize;
 }
 
 - (NSArray<NSString *> *)tags {

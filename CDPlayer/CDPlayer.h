@@ -15,6 +15,7 @@
 
 - (id)initWithInfo:(id<CDVideoInfoProvider>)infoProvider;
 
+
 @property (nonatomic, readonly) AVPlayer *player;
 @property (nonatomic, readonly) CDPlayerState state;
 
@@ -25,7 +26,13 @@
 
 @property (nonatomic) BOOL playOnWhileKeepUp;
 
+
+
 @property (nonatomic, readonly) CDVideoDownloadTask *task;
+
+
++ (NSString *)dispatcherTag;
++ (id<CDVideoDownloadTaskDispatcher>)dispatcher;
 
 - (void)play;
 - (void)pause;

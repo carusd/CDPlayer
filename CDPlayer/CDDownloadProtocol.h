@@ -44,12 +44,14 @@
 
 @property (nonatomic) NSInteger maxConcurrentNum;
 
+- (CDVideoDownloadTask *)taskWithInfo:(id<CDVideoInfoProvider>)provider;
 - (CDVideoDownloadTask *)makeTaskWithInfo:(id<CDVideoInfoProvider>)provider;
 
 - (void)tryToStartTask:(CDVideoDownloadTask *)task;
 - (void)addTask:(CDVideoDownloadTask *)task;
 - (void)removeTask:(CDVideoDownloadTask *)task;
 - (BOOL)containsTask:(CDVideoDownloadTask *)task;
+- (long long)sizeInDisk; // 单位为byte
 - (void)clearTasks;
 - (void)pauseAllLoadingTasks;
 - (BOOL)loading;

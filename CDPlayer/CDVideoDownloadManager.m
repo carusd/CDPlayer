@@ -191,6 +191,17 @@
     
 }
 
+- (long long)sizeInDisk {
+    __block long long result = 0;
+    [self.tasks enumerateObjectsUsingBlock:^(CDVideoDownloadTask *task, NSUInteger idx, BOOL *stop) {
+        
+        
+        result += [task sizeInDisk];
+    }];
+    
+    return result;
+}
+
 - (void)pauseAllLoadingTasks {
     [self.allTasks makeObjectsPerformSelector:@selector(pause)];
     

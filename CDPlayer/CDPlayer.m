@@ -29,8 +29,6 @@
 
 @property (nonatomic, strong) NSFileHandle *fileHandle;
 
-@property (nonatomic, strong) id<CDVideoDownloadTaskDispatcher> dispatcher;
-
 @property (nonatomic, strong) NSMutableArray<AVAssetResourceLoadingRequest *> *requests;
 
 @end
@@ -51,8 +49,8 @@
 - (id)initWithInfo:(id<CDVideoInfoProvider>)infoProvider {
     self = [super init];
     if (self) {
-        self.dispatcher = [[CDVideoDownloadMegaManager sharedInstance] dispatcherWithTag:@"player" class:nil];
-        self.task = [self.dispatcher makeTaskWithInfo:infoProvider];
+        
+        self.task = [[CDPlayer dispatcher] makeTaskWithInfo:infoProvider];
         
         
         if (infoProvider.completelyLoaded) {
@@ -92,6 +90,14 @@
     return self;
 }
 
++ (NSString *)dispatcherTag {
+    return @"player";
+}
+
++ (id<CDVideoDownloadTaskDispatcher>)dispatcher {
+    return [[CDVideoDownloadMegaManager sharedInstance] dispatcherWithTag:[CDPlayer dispatcherTag] class:nil];
+}
+
 - (void)playerItemPlaybackStalled:(NSNotification *)notif {
     
 }
@@ -109,17 +115,12 @@
 //                break;
 //        }
     } else if ([keyPath isEqualToString:@"playbackLikelyToKeepUp"]) {
-        if (self.playerItem.playbackLikelyToKeepUp) {
-            if (self.playOnWhileKeepUp) {
-                self.state = CDPlayerStatePlaying;
-            }
-            
-        } else {
-            if (CDVideoDownloadStateLoading == self.task.state) {
+        if (!self.playerItem.playbackLikelyToKeepUp) {
+            if (CDPlayerStatePlaying == self.state && CDVideoDownloadStateLoading == self.task.state) {
                 self.state = CDPlayerStateBuffering;
             }
+            
         }
-        
         
     } else if ([keyPath isEqualToString:@"playbackBufferEmpty"]) {
         if (self.task.state == CDVideoDownloadStateLoading) {
@@ -174,7 +175,7 @@
     
     if (!self.fromLocalFile) {
         
-        [self.dispatcher tryToStartTask:self.task];
+        [[CDPlayer dispatcher] tryToStartTask:self.task];
     }
     [self.player play];
     self.state = CDPlayerStatePlaying;
@@ -187,6 +188,7 @@
 
 - (void)pause {
     [self.player pause];
+    self.state = CDPlayerStatePause;
 }
 
 - (void)continueToBuffer {

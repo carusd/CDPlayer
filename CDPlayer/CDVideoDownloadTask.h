@@ -42,6 +42,8 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 
 @property (nonatomic, readonly) id<CDVideoInfoProvider> infoProvider;
 
+- (long long)sizeInDisk;
+
 - (void)addTag:(NSString *)tag;
 - (void)removeTag:(NSString *)tag;
 

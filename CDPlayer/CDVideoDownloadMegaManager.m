@@ -95,10 +95,11 @@ NSString * const CDVideoDownloadDirURLDidChanged = @"CDVideoDownloadDirURLDidCha
     if (!_allTasks) {
         _allTasks = [NSMutableArray array];
         
-        NSArray *contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:self.cacheDirURL.absoluteString error:nil];
+        NSArray *contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:self.cacheDirURL.relativePath error:nil];
         
         for (NSString *contentPath in contents) {
-            CDVideoDownloadTask *task = [NSKeyedUnarchiver unarchiveObjectWithFile:contentPath];
+            NSString *path = [NSString stringWithFormat:@"%@/%@", self.cacheDirURL.relativePath, contentPath];
+            CDVideoDownloadTask *task = [NSKeyedUnarchiver unarchiveObjectWithFile:path];
             [_allTasks addObject:task];
         }
     }
