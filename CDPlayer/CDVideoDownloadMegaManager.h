@@ -16,7 +16,7 @@ extern NSString * const CDVideoDownloadDirURLDidChanged;
 
 + (instancetype)sharedInstance;
 
-@property (nonatomic, strong) NSURL *cacheDirURL;
+@property (nonatomic, strong) NSString *cacheDirURLPath; // 在Caches目录下的相对路径
 
 
 - (id<CDVideoDownloadTaskDispatcher>)dispatcherWithTag:(NSString *)tag class:(Class)clazz;

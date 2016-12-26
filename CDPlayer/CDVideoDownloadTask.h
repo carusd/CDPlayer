@@ -23,10 +23,10 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 
 
 
-- (id)initWithVideoInfoProvider:(id<CDVideoInfoProvider>)provider taskURL:(NSURL *)taskURL;
+- (id)initWithVideoInfoProvider:(id<CDVideoInfoProvider>)provider taskURLPath:(NSString *)taskURLPath;
 
 
-@property (nonatomic, readonly) NSURL *taskURL;
+@property (nonatomic, readonly) NSString *taskURLPath;
 @property (readonly) CDVideoDownloadState state;
 @property (nonatomic) NSInteger priority;
 @property (nonatomic) long long offset;

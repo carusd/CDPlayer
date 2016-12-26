@@ -139,7 +139,7 @@
 
 - (CDVideoDownloadTask *)taskWithInfo:(id<CDVideoInfoProvider>)provider {
     for (CDVideoDownloadTask *task in self.tasks) {
-        if ([task.videoURL.absoluteString isEqualToString:[provider videoURL].absoluteString]) {
+        if (task == provider) {
             return task;
         }
     }
@@ -152,11 +152,12 @@
         return task;
     }
     
-    NSString *filename = [[[provider videoURL] lastPathComponent] stringByDeletingPathExtension];
-    NSString *cacheDirPath = [self.persistenceManager.cacheDirURL relativePath];
-    NSURL *taskURL = [NSURL fileURLWithPath:[NSString stringWithFormat:@"%@/%@", cacheDirPath, filename]];
+    NSString *filename = [[[provider videoURLPath] lastPathComponent] stringByDeletingPathExtension];
     
-    task = [[CDVideoDownloadTask alloc] initWithVideoInfoProvider:provider taskURL:taskURL];
+    NSString *taskURLPath = [NSString stringWithFormat:@"%@/%@", [self.persistenceManager cacheDirURLPath], filename];
+    
+    
+    task = [[CDVideoDownloadTask alloc] initWithVideoInfoProvider:provider taskURLPath:taskURLPath];
     task.label = [provider title];
     [task addTag:self.tag];
     
@@ -177,17 +178,28 @@
     return self.loadingTasks.count > 0;
 }
 
-- (void)clearTasks {
-    for (CDVideoDownloadTask *task in self.tasks) {
-        [task removeTag:self.tag];
-        
-        if (task.tags.count <= 0) {
-            [task destroy];
-            [self.persistenceManager removeTask:task];
-        }
-    }
+- (void)clearTasks:(void (^)(void))completion {
+    [self pauseAllLoadingTasks];
     
-    self.tasks = [NSMutableArray array];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        for (CDVideoDownloadTask *task in self.tasks) {
+            [task removeTag:self.tag];
+            
+            if (task.tags.count <= 0) {
+                [task destroy];
+                [self.persistenceManager removeTask:task];
+            }
+        }
+        
+        self.tasks = [NSMutableArray array];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (completion) {
+                completion();
+            }
+        });
+        
+    });
     
 }
 

@@ -51,19 +51,22 @@
     if (self) {
         
         self.task = [[CDPlayer dispatcher] makeTaskWithInfo:infoProvider];
-        
+        NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
+        NSString *localURLPath = [NSString stringWithFormat:@"%@/%@", prefix, self.task.localURLPath];
         
         if (infoProvider.completelyLoaded) {
-            self.asset = [AVURLAsset assetWithURL:self.task.localURL];
+            self.asset = [AVURLAsset assetWithURL:[NSURL fileURLWithPath:localURLPath]];
             self.fromLocalFile = YES;
         } else {
-            NSURLComponents *videoURLComponents = [[NSURLComponents alloc] initWithURL:self.task.videoURL resolvingAgainstBaseURL:NO];
+            NSURLComponents *videoURLComponents = [[NSURLComponents alloc] initWithURL:[NSURL URLWithString:self.task.videoURLPath] resolvingAgainstBaseURL:NO];
             videoURLComponents.scheme = @"streaming";
             self.asset = [AVURLAsset assetWithURL:videoURLComponents.URL];
             [self.asset.resourceLoader setDelegate:self queue:dispatch_get_main_queue()];
             
-            self.fileHandle = [NSFileHandle fileHandleForReadingFromURL:self.task.localURL error:nil];
-            
+            NSError *e = nil;
+            self.fileHandle = [NSFileHandle fileHandleForReadingFromURL:[NSURL fileURLWithPath:localURLPath] error:&e];
+//            self.fileHandle = [NSFileHandle fileHandleForReadingAtPath:localURLPath];
+            NSLog(@"eeeeeeeeeee  %@", e);
             self.fromLocalFile = NO;
         }
         

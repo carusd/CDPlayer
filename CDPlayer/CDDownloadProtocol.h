@@ -8,14 +8,14 @@
 
 @protocol CDVideoInfoProvider <NSObject, NSCoding>
 
-@property (readonly) NSURL *videoURL;
-@property (readonly) NSURL *localURL;
-@property (readonly) NSInteger duration; // 单位为秒
-@property (readonly) BOOL completelyLoaded;
+@property (readonly) NSString *videoURLPath;
+@property (readonly) NSString *localURLPath; // 相对Caches的路径，比如说完整路径是/Library/Caches/tmp.mp4, 则这个字段的值应该是tmp.mp4
+
 
 @optional
 
-
+@property (readonly) NSInteger duration; // 单位为秒
+@property (readonly) BOOL completelyLoaded;
 @property (readonly, copy) NSString *title;
 @property (readonly) int64_t size; // 单位为byte
 @property (readonly) int64_t width;
@@ -26,7 +26,7 @@
 @class CDVideoDownloadTask;
 @protocol CDVideoDownloadTaskPersistenceManager <NSObject>
 
-@property (nonatomic, readonly) NSURL *cacheDirURL;
+@property (nonatomic, readonly) NSString *cacheDirURLPath;
 
 - (NSMutableArray<CDVideoDownloadTask *> *)tasksWithTag:(NSString *)tag;
 - (void)addTask:(CDVideoDownloadTask *)task;
@@ -52,7 +52,7 @@
 - (void)removeTask:(CDVideoDownloadTask *)task;
 - (BOOL)containsTask:(CDVideoDownloadTask *)task;
 - (long long)sizeInDisk; // 单位为byte
-- (void)clearTasks;
+- (void)clearTasks:(void(^)(void))completion;
 - (void)pauseAllLoadingTasks;
 - (BOOL)loading;
 
@@ -82,4 +82,3 @@ typedef enum : NSUInteger {
     CDPlayerStateStop,
     CDPlayerStateBuffering
 } CDPlayerState;
-

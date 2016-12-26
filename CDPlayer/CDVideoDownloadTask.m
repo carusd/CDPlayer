@@ -23,9 +23,9 @@ NSString * const CDVideoDownloadTaskNotifTaskKey = @"CDVideoDownloadTaskNotifTas
 
 @interface CDVideoDownloadTask ()
 
-@property (nonatomic, strong) NSURL *videoURL;
-@property (nonatomic, strong) NSURL *localURL;
-@property (nonatomic, strong) NSURL *taskURL;
+@property (nonatomic, strong) NSString *videoURLPath;
+@property (nonatomic, strong) NSString *localURLPath;
+@property (nonatomic, strong) NSString *taskURLPath;
 @property (nonatomic) CDVideoDownloadState state;
 @property (nonatomic, strong) NSError *error;
 
@@ -58,21 +58,22 @@ static long long _VideoBlockSize = 100000; // in bytes
     return _VideoBlockSize;
 }
 
-- (id)initWithVideoInfoProvider:(id<CDVideoInfoProvider>)provider taskURL:(NSURL *)taskURL {
+- (id)initWithVideoInfoProvider:(id<CDVideoInfoProvider>)provider taskURLPath:(NSString *)taskURLPath {
     self = [super init];
     if (self) {
         self.infoProvider = provider;
         
-        self.videoURL = provider.videoURL;
-        self.localURL = provider.localURL;
-        self.taskURL = taskURL;
+        self.videoURLPath = [provider videoURLPath];
+        self.localURLPath = [provider localURLPath];
+        self.taskURLPath = taskURLPath;
+        
         
         self.priority = CDVideoDownloadTaskPriorityMedium;
         
         self.taskTags = [NSMutableArray array];
         
         
-        self.cache_queue = dispatch_queue_create([[self.videoURL absoluteString] UTF8String], DISPATCH_QUEUE_CONCURRENT);
+        self.cache_queue = dispatch_queue_create([self.videoURLPath UTF8String], DISPATCH_QUEUE_CONCURRENT);
         
         
         self.httpManager = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
@@ -99,9 +100,9 @@ static long long _VideoBlockSize = 100000; // in bytes
         if (CDVideoDownloadStateLoading == self.state) {
             self.state = CDVideoDownloadStatePause;
         }
-        self.videoURL = [aDecoder decodeObjectForKey:@"videoURL"];
-        self.taskURL = [aDecoder decodeObjectForKey:@"taskURL"];
-        self.localURL = [aDecoder decodeObjectForKey:@"localURL"];
+        self.videoURLPath = [aDecoder decodeObjectForKey:@"videoURLPath"];
+        self.taskURLPath = [aDecoder decodeObjectForKey:@"taskURLPath"];
+        self.localURLPath = [aDecoder decodeObjectForKey:@"localURLPath"];
         self.priority = [aDecoder decodeIntegerForKey:@"priority"];
         self.offset = [aDecoder decodeInt64ForKey:@"offset"];
         self.totalBytes = [aDecoder decodeInt64ForKey:@"totalBytes"];
@@ -112,7 +113,7 @@ static long long _VideoBlockSize = 100000; // in bytes
         
         self.infoProvider = [aDecoder decodeObjectForKey:@"infoProvider"];
         
-        self.cache_queue = dispatch_queue_create([[self.videoURL absoluteString] UTF8String], DISPATCH_QUEUE_CONCURRENT);
+        self.cache_queue = dispatch_queue_create([self.videoURLPath UTF8String], DISPATCH_QUEUE_CONCURRENT);
         
         self.httpManager = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
         self.httpManager.responseSerializer = [AFHTTPResponseSerializer serializer];
@@ -127,9 +128,9 @@ static long long _VideoBlockSize = 100000; // in bytes
 - (void)encodeWithCoder:(NSCoder *)aCoder {
     
     [aCoder encodeInteger:self.state forKey:@"state"];
-    [aCoder encodeObject:self.videoURL forKey:@"videoURL"];
-    [aCoder encodeObject:self.taskURL forKey:@"taskURL"];
-    [aCoder encodeObject:self.localURL forKey:@"localURL"];
+    [aCoder encodeObject:self.videoURLPath forKey:@"videoURLPath"];
+    [aCoder encodeObject:self.taskURLPath forKey:@"taskURLPath"];
+    [aCoder encodeObject:self.localURLPath forKey:@"localURLPath"];
     [aCoder encodeInteger:self.priority forKey:@"priority"];
     [aCoder encodeInt64:self.offset forKey:@"offset"];
     [aCoder encodeInt64:self.totalBytes forKey:@"totalBytes"];
@@ -141,13 +142,21 @@ static long long _VideoBlockSize = 100000; // in bytes
     
 }
 
+- (NSString *)absolutePathWithRelativePath:(NSString *)path {
+    NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
+    return [NSString stringWithFormat:@"%@/%@", prefix, path];
+}
+
 - (long long)sizeInDisk {
+    NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
+    
+    
     NSError *e = nil;
-    NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:self.localURL.relativePath error:&e];
+    NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[NSString stringWithFormat:@"%@/%@", prefix, self.localURLPath] error:&e];
     NSLog(@"eeeeeeeeeee  %@", e);
     long long fileSize = [fileAttributes[NSFileSize] longLongValue];
     
-    NSDictionary *taskAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:self.taskURL.relativePath error:nil];
+    NSDictionary *taskAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[NSString stringWithFormat:@"%@/%@", prefix, self.taskURLPath] error:nil];
     long long taskSize = [taskAttributes[NSFileSize] longLongValue];
     
     return fileSize + taskSize;
@@ -166,7 +175,7 @@ static long long _VideoBlockSize = 100000; // in bytes
 }
 
 - (void)save {
-    [NSKeyedArchiver archiveRootObject:self toFile:self.taskURL.relativePath];
+    [NSKeyedArchiver archiveRootObject:self toFile:[self absolutePathWithRelativePath:self.taskURLPath]];
 }
 
 - (void)prepare {
@@ -176,14 +185,14 @@ static long long _VideoBlockSize = 100000; // in bytes
     
     self.error = nil;
     
-    if ([[NSFileManager defaultManager] fileExistsAtPath:self.localURL.relativePath]) {
-        [[NSFileManager defaultManager] removeItemAtURL:self.localURL error:nil];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:[self absolutePathWithRelativePath:self.localURLPath]]) {
+        [[NSFileManager defaultManager] removeItemAtURL:[NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.localURLPath]] error:nil];
     }
     
     
-    [[NSFileManager defaultManager] createFileAtPath:self.localURL.relativePath contents:nil attributes:nil];
+    [[NSFileManager defaultManager] createFileAtPath:[self absolutePathWithRelativePath:self.localURLPath] contents:nil attributes:nil];
     
-    self.fileHandle = [NSFileHandle fileHandleForWritingAtPath:self.localURL.relativePath];
+    self.fileHandle = [NSFileHandle fileHandleForWritingAtPath:[self absolutePathWithRelativePath:self.localURLPath]];
     
     [self save];
 }
@@ -353,7 +362,7 @@ static long long _VideoBlockSize = 100000; // in bytes
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
 //    NSLog(@"%@ requesting %@, with range %@", self, self.videoURL.absoluteString, range);
-    [self.httpManager GET:self.videoURL.absoluteString parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
+    [self.httpManager GET:self.videoURLPath parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
         
         
         CDVideoBlock *incomingBlock = [[CDVideoBlock alloc] initWithOffset:wself.offset length:task.countOfBytesReceived];
@@ -461,8 +470,8 @@ static long long _VideoBlockSize = 100000; // in bytes
 
 - (void)destroy {
     [self pause];
-    [[NSFileManager defaultManager] removeItemAtURL:self.localURL error:nil];
-    [[NSFileManager defaultManager] removeItemAtURL:self.taskURL error:nil];
+    [[NSFileManager defaultManager] removeItemAtURL:[NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.localURLPath]] error:nil];
+    [[NSFileManager defaultManager] removeItemAtURL:[NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.taskURLPath]] error:nil];
     
 }
 
@@ -473,7 +482,8 @@ static long long _VideoBlockSize = 100000; // in bytes
 }
 
 - (BOOL)isEqual:(CDVideoDownloadTask *)task {
-    return [self.videoURL isEqual:task.videoURL];
+    return [self.videoURLPath isEqualToString:task.videoURLPath];
+    
 }
 
 - (NSString *)description {
