@@ -74,7 +74,7 @@
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
         
         self.player = [AVPlayer playerWithPlayerItem:self.playerItem];
-        self.player.automaticallyWaitsToMinimizeStalling = NO;
+//        self.player.automaticallyWaitsToMinimizeStalling = NO;
         
         self.playOnWhileKeepUp = YES;
         
