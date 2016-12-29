@@ -179,7 +179,7 @@
 - (void)play {
     
     if (!self.fromLocalFile) {
-        
+        self.task.priority = CDVideoDownloadTaskPriorityImmediate;
         [[CDPlayer dispatcher] tryToStartTask:self.task];
     }
     [self.player play];
@@ -197,8 +197,15 @@
 }
 
 - (void)continueToBuffer {
-    [self.task load];
-    self.state = CDPlayerStateBuffering;
+    self.task.priority = CDVideoDownloadTaskPriorityImmediate;
+    [[CDPlayer dispatcher] tryToStartTask:self.task];
+    
+    [self.player play];
+    self.state = CDPlayerStatePlaying;
+    
+    if (!self.playerItem.playbackLikelyToKeepUp && CDVideoDownloadStateLoading == self.task.state) {
+        self.state = CDPlayerStateBuffering;
+    }
     
 }
 
