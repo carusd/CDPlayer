@@ -36,6 +36,8 @@
 @implementation CDPlayer
 
 - (void)dealloc {
+    [self.task pause];
+    
     [self.fileHandle closeFile];
     [self.asset.resourceLoader setDelegate:nil queue:dispatch_get_main_queue()];
     
@@ -205,11 +207,13 @@
     
     [self.playerItem seekToTime:CMTimeMakeWithSeconds(seekTime, self.playerItem.currentTime.timescale)];
     
+    
+    __weak CDPlayer *wself = self;
     // 寻找目标位置的数据是否已经下载完，没有的话需要将task.offset定位到这个地方，从这里开始下载
     long long bytesOffset = self.task.totalBytes * position;
     [self.task.loadedVideoBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *videoBlock, NSUInteger idx, BOOL *stop) {
         if (![videoBlock containsPosition:bytesOffset]) {
-            [self.task pushOffset:MAX(0, bytesOffset - 10)];// 往前边挪一边，保证最左边的数据完整
+            [wself.task pushOffset:MAX(0, bytesOffset - 10)];// 往前边挪一边，保证最左边的数据完整
             
         }
     }];
