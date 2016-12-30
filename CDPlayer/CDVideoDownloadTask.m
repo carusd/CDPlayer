@@ -213,6 +213,10 @@ static long long _VideoBlockSize = 100000; // in bytes
         
         while (true) {
             self.offset = [self popOffset];
+//            CDVideoBlock *blockToBeDownload = [[CDVideoBlock alloc] initWithOffset:self.offset length:[CDVideoDownloadTask VideoBlockSize]];
+//            
+//            
+            
             if (CDVideoDownloadStateLoading == self.state && (self.offset < self.totalBytes || self.totalBytes <= 0)) {
                 [self _loadBlock];
             } else {
@@ -265,6 +269,9 @@ static long long _VideoBlockSize = 100000; // in bytes
         nVideoBlock.length = videoBlock.length * 1.0 / self.totalBytes;
         
         [result addObject:nVideoBlock];
+        
+        
+        NSLog(@"loaded offset %f", nVideoBlock.offset);
     }];
     
     return [result copy];
@@ -373,16 +380,13 @@ static long long _VideoBlockSize = 100000; // in bytes
     [self.httpManager GET:self.videoURLPath parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
         
         
-        if (![[NSFileManager defaultManager] fileExistsAtPath:[self absolutePathWithRelativePath:self.localURLPath]]) {
-            NSLog(@"fuck this");
-        }
         
         CDVideoBlock *incomingBlock = [[CDVideoBlock alloc] initWithOffset:wself.offset length:task.countOfBytesReceived];
         [wself updateLoadedBlocksWithIncomingBlock:incomingBlock];
         
         [wself.fileHandle seekToFileOffset:wself.offset];
-//        NSLog(@"task offset %lld", wself.offset);
-//        NSLog(@"file offset %lld", wself.fileHandle.offsetInFile);
+        NSLog(@"task offset %lld", wself.offset);
+        NSLog(@"file offset %lld", wself.fileHandle.offsetInFile);
         [wself.fileHandle writeData:videoBlock];
         wself.offset += task.countOfBytesReceived;
         NSHTTPURLResponse *response = (NSHTTPURLResponse *)task.response;

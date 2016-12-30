@@ -113,15 +113,15 @@
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
     
     if ([keyPath isEqualToString:@"status"]) {
-//        switch (self.playerItem.status) {
-//            case AVPlayerItemStatusReadyToPlay:
-//                [self.player play];
-//                break;
-//            case AVPlayerItemStatusFailed:
-//            case AVPlayerItemStatusUnknown:
-//            default:
-//                break;
-//        }
+        switch (self.playerItem.status) {
+            case AVPlayerItemStatusReadyToPlay:
+                NSLog(@"ffffffffff");
+                break;
+            case AVPlayerItemStatusFailed:
+            case AVPlayerItemStatusUnknown:
+            default:
+                break;
+        }
     } else if ([keyPath isEqualToString:@"playbackLikelyToKeepUp"]) {
         if (!self.playerItem.playbackLikelyToKeepUp) {
             if (CDPlayerStatePlaying == self.state && CDVideoDownloadStateLoading == self.task.state) {
@@ -131,16 +131,16 @@
         }
         
     } else if ([keyPath isEqualToString:@"playbackBufferEmpty"]) {
-        if (self.task.state == CDVideoDownloadStateLoading) {
-            self.state = CDPlayerStateBuffering;
-        } else if (self.task.state == CDVideoDownloadStateLoadError) {
-            // 下载途中失败之后，播放器还是继续在播放，这个时候不应该就马上显示错误
-            // 而是继续播放，直到playbackBufferEmpty为真，这个时候还是不应该马上
-            // 显示错误。而是尝试重新下载，重新下载还是失败，在handleTaskStateDidChanged
-            // 中处理
-            [self.task load];
-            self.state = CDPlayerStateBuffering;
-        }
+//        if (self.task.state == CDVideoDownloadStateLoading) {
+//            self.state = CDPlayerStateBuffering;
+//        } else if (self.task.state == CDVideoDownloadStateLoadError) {
+//            // 下载途中失败之后，播放器还是继续在播放，这个时候不应该就马上显示错误
+//            // 而是继续播放，直到playbackBufferEmpty为真，这个时候还是不应该马上
+//            // 显示错误。而是尝试重新下载，重新下载还是失败，在handleTaskStateDidChanged
+//            // 中处理
+//            [self.task load];
+//            self.state = CDPlayerStateBuffering;
+//        }
         
     }
 }
@@ -161,7 +161,7 @@
         NSMutableArray *completedRequests = [NSMutableArray array];
         
         for (AVAssetResourceLoadingRequest *loadingRequest in self.requests) {
-            NSLog(@"before %@", loadingRequest);
+//            NSLog(@"before %@", loadingRequest);
             BOOL fed = [self tryToFeedRequest:loadingRequest];
             if (fed) {
                 [completedRequests addObject:loadingRequest];
@@ -169,7 +169,6 @@
         }
         
         [self.requests removeObjectsInArray:completedRequests];
-        
         
         
         if (CDPlayerStateBuffering == self.state) {
@@ -217,17 +216,17 @@
 }
 
 - (void)seekToPosition:(double)position {
-    NSInteger seekTime = [self.task.infoProvider duration] * position;
+    CGFloat seekTime = [self.task.infoProvider duration] * position;
     
     [self.playerItem seekToTime:CMTimeMakeWithSeconds(seekTime, self.playerItem.currentTime.timescale)];
     
-    
+    NSLog(@"seek to postion %f", position);
     __weak CDPlayer *wself = self;
     // 寻找目标位置的数据是否已经下载完，没有的话需要将task.offset定位到这个地方，从这里开始下载
     long long bytesOffset = self.task.totalBytes * position;
     [self.task.loadedVideoBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *videoBlock, NSUInteger idx, BOOL *stop) {
         if (![videoBlock containsPosition:bytesOffset]) {
-            [wself.task pushOffset:MAX(0, bytesOffset - 10)];// 往前边挪一边，保证最左边的数据完整
+            [wself.task pushOffset:MAX(0, bytesOffset - 1000)];// 往前边挪一边，保证最左边的数据完整
             
         }
     }];
@@ -278,9 +277,9 @@
             
             [wself.fileHandle seekToFileOffset:startOffset];
             NSData *requestedData = [wself.fileHandle readDataOfLength:readingDataLength];
-            NSLog(@"start offset %lld", startOffset);
-            NSLog(@"reading length %lld", readingDataLength);
-            NSLog(@"real length %lld", requestedData.length);
+//            NSLog(@"start offset %lld", startOffset);
+//            NSLog(@"reading length %lld", readingDataLength);
+//            NSLog(@"real length %lld", requestedData.length);
             [loadingRequest.dataRequest respondWithData:requestedData];
             [loadingRequest finishLoading];
             *stop = YES;
