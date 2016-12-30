@@ -195,14 +195,12 @@ static long long _VideoBlockSize = 100000; // in bytes
         NSLog(@"create file failed");
     }
     
-    if ([[NSFileManager defaultManager] fileExistsAtPath:[self absolutePathWithRelativePath:self.localURLPath]]) {
-        NSLog(@"hm?");
-    }
+
     
     NSURL *writingURL = [NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.localURLPath]];
     NSError *e = nil;
     self.fileHandle = [NSFileHandle fileHandleForWritingToURL:writingURL error:&e];;
-    NSLog(@"eeeeeeeeee  %@", e);
+    
     
     [self save];
 }

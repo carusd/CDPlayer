@@ -139,7 +139,7 @@
 
 - (CDVideoDownloadTask *)taskWithInfo:(id<CDVideoInfoProvider>)provider {
     for (CDVideoDownloadTask *task in self.tasks) {
-        if (task == provider) {
+        if ([task.videoURLPath isEqualToString:[provider videoURLPath]]) {
             return task;
         }
     }
