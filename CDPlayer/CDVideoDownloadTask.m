@@ -190,9 +190,19 @@ static long long _VideoBlockSize = 100000; // in bytes
     }
     
     
-    [[NSFileManager defaultManager] createFileAtPath:[self absolutePathWithRelativePath:self.localURLPath] contents:nil attributes:nil];
+    BOOL result = [[NSFileManager defaultManager] createFileAtPath:[self absolutePathWithRelativePath:self.localURLPath] contents:nil attributes:nil];
+    if (!result) {
+        NSLog(@"create file failed");
+    }
     
-    self.fileHandle = [NSFileHandle fileHandleForWritingAtPath:[self absolutePathWithRelativePath:self.localURLPath]];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:[self absolutePathWithRelativePath:self.localURLPath]]) {
+        NSLog(@"hm?");
+    }
+    
+    NSURL *writingURL = [NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.localURLPath]];
+    NSError *e = nil;
+    self.fileHandle = [NSFileHandle fileHandleForWritingToURL:writingURL error:&e];;
+    NSLog(@"eeeeeeeeee  %@", e);
     
     [self save];
 }
@@ -364,6 +374,10 @@ static long long _VideoBlockSize = 100000; // in bytes
 //    NSLog(@"%@ requesting %@, with range %@", self, self.videoURL.absoluteString, range);
     [self.httpManager GET:self.videoURLPath parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
         
+        
+        if (![[NSFileManager defaultManager] fileExistsAtPath:[self absolutePathWithRelativePath:self.localURLPath]]) {
+            NSLog(@"fuck this");
+        }
         
         CDVideoBlock *incomingBlock = [[CDVideoBlock alloc] initWithOffset:wself.offset length:task.countOfBytesReceived];
         [wself updateLoadedBlocksWithIncomingBlock:incomingBlock];

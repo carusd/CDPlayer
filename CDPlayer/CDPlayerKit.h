@@ -14,8 +14,3 @@
 #import "CDPlayer.h"
 
 
-#ifdef CDPlayerKit_Debug
-#define NSLog(log, ...) (NSLog(log, ##__VA_ARGS__))
-#else
-#define NSLog(log, ...)
-#endif

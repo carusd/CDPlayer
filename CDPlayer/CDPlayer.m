@@ -68,7 +68,10 @@
             NSError *e = nil;
             self.fileHandle = [NSFileHandle fileHandleForReadingFromURL:[NSURL fileURLWithPath:localURLPath] error:&e];
 //            self.fileHandle = [NSFileHandle fileHandleForReadingAtPath:localURLPath];
-            NSLog(@"eeeeeeeeeee  %@", e);
+            if (e) {
+                NSLog(@"eeeeeeeeeee  %@", e);
+            }
+            
             self.fromLocalFile = NO;
         }
         
@@ -156,7 +159,9 @@
     CDVideoDownloadTask *task = notif.userInfo[CDVideoDownloadTaskNotifTaskKey];
     if (task == self.task) {
         NSMutableArray *completedRequests = [NSMutableArray array];
+        
         for (AVAssetResourceLoadingRequest *loadingRequest in self.requests) {
+            NSLog(@"before %@", loadingRequest);
             BOOL fed = [self tryToFeedRequest:loadingRequest];
             if (fed) {
                 [completedRequests addObject:loadingRequest];
@@ -164,6 +169,8 @@
         }
         
         [self.requests removeObjectsInArray:completedRequests];
+        
+        
         
         if (CDPlayerStateBuffering == self.state) {
             [self.player play];
@@ -248,6 +255,7 @@
         loadingRequest.contentInformationRequest.byteRangeAccessSupported = YES;
         loadingRequest.contentInformationRequest.contentType = CFBridgingRelease(contentType);
         loadingRequest.contentInformationRequest.contentLength = self.task.totalBytes;
+//        loadingRequest.contentInformationRequest.contentLength = 16512030;
     }
     
     __block BOOL found = NO;
@@ -270,7 +278,9 @@
             
             [wself.fileHandle seekToFileOffset:startOffset];
             NSData *requestedData = [wself.fileHandle readDataOfLength:readingDataLength];
-            
+            NSLog(@"start offset %lld", startOffset);
+            NSLog(@"reading length %lld", readingDataLength);
+            NSLog(@"real length %lld", requestedData.length);
             [loadingRequest.dataRequest respondWithData:requestedData];
             [loadingRequest finishLoading];
             *stop = YES;

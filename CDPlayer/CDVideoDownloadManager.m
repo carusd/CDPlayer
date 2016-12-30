@@ -112,7 +112,7 @@
         
         // 自动清理
         if (self.tasks.count > 30) {
-            CDVideoDownloadTask *lastTask = self.tasks.lastObject;
+            CDVideoDownloadTask *lastTask = self.tasks.firstObject;
             [lastTask destroy];
             [self.persistenceManager removeTask:lastTask];
             [self removeTask:lastTask];
