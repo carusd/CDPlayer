@@ -29,7 +29,7 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 @property (nonatomic, readonly) NSString *taskURLPath;
 @property (readonly) CDVideoDownloadState state;
 @property (nonatomic) NSInteger priority;
-@property (nonatomic) long long offset;
+@property (nonatomic, readonly) long long offset;
 @property (nonatomic, readonly) int64_t totalBytes;
 @property (nonatomic, readonly) NSArray<CDVideoBlock *> *loadedVideoBlocks; // 表示已经下载的时间区间
 @property (nonatomic, readonly) NSArray<CDVideoNormalizedBlock *> *loadedVideoRanges; //同上，但是这是正则化表示，范围是0-1

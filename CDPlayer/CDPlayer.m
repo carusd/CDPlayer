@@ -53,6 +53,7 @@
     if (self) {
         
         self.task = [[CDPlayer dispatcher] makeTaskWithInfo:infoProvider];
+        [self.task pushOffset:0]; // 有些任务可能是下载到一半的，这里重置下载位置，确保开始的播放
         NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
         NSString *localURLPath = [NSString stringWithFormat:@"%@/%@", prefix, self.task.localURLPath];
         
@@ -67,10 +68,7 @@
             
             NSError *e = nil;
             self.fileHandle = [NSFileHandle fileHandleForReadingFromURL:[NSURL fileURLWithPath:localURLPath] error:&e];
-//            self.fileHandle = [NSFileHandle fileHandleForReadingAtPath:localURLPath];
-            if (e) {
-                NSLog(@"eeeeeeeeeee  %@", e);
-            }
+
             
             self.fromLocalFile = NO;
         }
@@ -115,7 +113,7 @@
     if ([keyPath isEqualToString:@"status"]) {
         switch (self.playerItem.status) {
             case AVPlayerItemStatusReadyToPlay:
-                NSLog(@"ffffffffff");
+                
                 break;
             case AVPlayerItemStatusFailed:
             case AVPlayerItemStatusUnknown:
@@ -161,7 +159,7 @@
         NSMutableArray *completedRequests = [NSMutableArray array];
         
         for (AVAssetResourceLoadingRequest *loadingRequest in self.requests) {
-//            NSLog(@"before %@", loadingRequest);
+
             BOOL fed = [self tryToFeedRequest:loadingRequest];
             if (fed) {
                 [completedRequests addObject:loadingRequest];
@@ -216,20 +214,42 @@
 }
 
 - (void)seekToPosition:(double)position {
+    if (position < 0) {
+        position = 0;
+    } else if (position > 1) {
+        position = 1;
+    }
+    
     CGFloat seekTime = [self.task.infoProvider duration] * position;
     
     [self.playerItem seekToTime:CMTimeMakeWithSeconds(seekTime, self.playerItem.currentTime.timescale)];
     
-    NSLog(@"seek to postion %f", position);
+    
     __weak CDPlayer *wself = self;
     // 寻找目标位置的数据是否已经下载完，没有的话需要将task.offset定位到这个地方，从这里开始下载
     long long bytesOffset = self.task.totalBytes * position;
+    __block BOOL found = NO;
     [self.task.loadedVideoBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *videoBlock, NSUInteger idx, BOOL *stop) {
-        if (![videoBlock containsPosition:bytesOffset]) {
-            [wself.task pushOffset:MAX(0, bytesOffset - 1000)];// 往前边挪一边，保证最左边的数据完整
+        if ([videoBlock containsPosition:bytesOffset]) {
+            found = YES;
+            
+            if (videoBlock.offset + videoBlock.length < wself.task.totalBytes) {
+                [wself.task pushOffset:videoBlock.offset + videoBlock.length];// 往前边挪一边，保证最左边的数据完整
+                
+                if (CDVideoDownloadStateLoading != wself.task.state) {
+                    [wself.task load];
+                }
+                
+            }
+            
+            *stop = YES;
             
         }
     }];
+    
+    if (!found) {
+        [wself.task pushOffset:MAX(0, bytesOffset - 1000)];// 往前边挪一边，保证最左边的数据完整
+    }
 }
 
 - (void)seekToTime:(CMTime)time {
@@ -277,9 +297,7 @@
             
             [wself.fileHandle seekToFileOffset:startOffset];
             NSData *requestedData = [wself.fileHandle readDataOfLength:readingDataLength];
-//            NSLog(@"start offset %lld", startOffset);
-//            NSLog(@"reading length %lld", readingDataLength);
-//            NSLog(@"real length %lld", requestedData.length);
+            
             [loadingRequest.dataRequest respondWithData:requestedData];
             [loadingRequest finishLoading];
             *stop = YES;
