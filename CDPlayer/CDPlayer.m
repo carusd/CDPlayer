@@ -227,7 +227,9 @@
     NSLog(@"ppppppppp  %f", position);
     
     __weak CDPlayer *wself = self;
+    
     // 寻找目标位置的数据是否已经下载完，没有的话需要将task.offset定位到这个地方，从这里开始下载
+    
     long long bytesOffset = self.task.totalBytes * position;
     __block BOOL found = NO;
     [self.task.loadedVideoBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *videoBlock, NSUInteger idx, BOOL *stop) {
@@ -235,7 +237,7 @@
             found = YES;
             
             if (videoBlock.offset + videoBlock.length < wself.task.totalBytes) {
-                [wself.task pushOffset:videoBlock.offset + videoBlock.length];// 往前边挪一边，保证最左边的数据完整
+                [wself.task pushOffset:videoBlock.offset + videoBlock.length - 1];
                 
                 if (CDVideoDownloadStateLoading != wself.task.state) {
                     [wself.task load];
@@ -249,6 +251,7 @@
     }];
     
     if (!found) {
+        
         [wself.task pushOffset:MAX(0, bytesOffset - [CDVideoDownloadTask VideoBlockSize])];// 往前边挪一边，保证最左边的数据完整
     }
 }
