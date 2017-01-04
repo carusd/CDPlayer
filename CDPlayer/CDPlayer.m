@@ -221,9 +221,10 @@
     }
     
     CGFloat seekTime = [self.task.infoProvider duration] * position;
+//    seekTime += 0.5;
     
     [self.playerItem seekToTime:CMTimeMakeWithSeconds(seekTime, self.playerItem.currentTime.timescale)];
-    
+    NSLog(@"ppppppppp  %f", position);
     
     __weak CDPlayer *wself = self;
     // 寻找目标位置的数据是否已经下载完，没有的话需要将task.offset定位到这个地方，从这里开始下载
@@ -248,7 +249,7 @@
     }];
     
     if (!found) {
-        [wself.task pushOffset:MAX(0, bytesOffset - 1000)];// 往前边挪一边，保证最左边的数据完整
+        [wself.task pushOffset:MAX(0, bytesOffset - [CDVideoDownloadTask VideoBlockSize])];// 往前边挪一边，保证最左边的数据完整
     }
 }
 
@@ -283,12 +284,15 @@
     [self.task.loadedVideoBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *videoBlock, NSUInteger idx, BOOL *stop) {
         
         long long readingDataLength = MIN(loadingRequest.dataRequest.requestedLength, [CDVideoDownloadTask VideoBlockSize]);
-//        long long readingDataLength = loadingRequest.dataRequest.requestedLength;
+
         
         long long startOffset = loadingRequest.dataRequest.requestedOffset;
         if (loadingRequest.dataRequest.currentOffset != 0) {
             startOffset = loadingRequest.dataRequest.currentOffset;
         }
+        
+        NSLog(@"data request %@", loadingRequest.dataRequest);
+        NSLog(@"ddddddddddd  %@", wself.task.loadedVideoBlocks);
         
         CDVideoBlock *requestedBlock = [[CDVideoBlock alloc] initWithOffset:startOffset length:readingDataLength];
         if ([videoBlock containsBlock:requestedBlock]) {
