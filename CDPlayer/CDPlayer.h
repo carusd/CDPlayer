@@ -10,6 +10,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import "CDVideoDownloadTask.h"
 
+extern NSString * const CDPlayerDidSeekToPositionNotif;
 
 @interface CDPlayer : NSObject
 

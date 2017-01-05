@@ -347,6 +347,7 @@ static long long _VideoBlockSize = 100000; // in bytes
                             [updatedBlocks addObject:updatedBlock];
                             
                             [updatedBlocks addObjectsFromArray:[wself.loadedBlocks subarrayWithRange:NSMakeRange(idx, wself.loadedBlocks.count - idx)]];
+                            *stop = YES;
                             
                         } else {
                             if (wself.loadedBlocks.count - 1 == idx) {

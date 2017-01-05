@@ -14,6 +14,8 @@
 #import "CDVideoDownloadMegaManager.h"
 #import "CDVideoBlock.h"
 
+NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNotif";
+
 @interface CDPlayer()<AVAssetResourceLoaderDelegate>
 
 @property (nonatomic, strong) AVPlayer *player;
@@ -30,6 +32,10 @@
 @property (nonatomic, strong) NSFileHandle *fileHandle;
 
 @property (nonatomic, strong) NSMutableArray<AVAssetResourceLoadingRequest *> *requests;
+
+@property (nonatomic) BOOL shouldPushOffset;
+
+@property (nonatomic) double shouldSeekToPosition;
 
 @end
 
@@ -125,9 +131,7 @@
             if (CDPlayerStatePlaying == self.state && CDVideoDownloadStateLoading == self.task.state) {
                 self.state = CDPlayerStateBuffering;
             }
-            
         }
-        
     } else if ([keyPath isEqualToString:@"playbackBufferEmpty"]) {
 //        if (self.task.state == CDVideoDownloadStateLoading) {
 //            self.state = CDPlayerStateBuffering;
@@ -158,20 +162,47 @@
     if (task == self.task) {
         NSMutableArray *completedRequests = [NSMutableArray array];
         
+        
+        long long smallestOffset = 0;
         for (AVAssetResourceLoadingRequest *loadingRequest in self.requests) {
-
+            
             BOOL fed = [self tryToFeedRequest:loadingRequest];
             if (fed) {
                 [completedRequests addObject:loadingRequest];
+            } else {
+                
+                long long startOffset = loadingRequest.dataRequest.requestedOffset;
+                if (loadingRequest.dataRequest.currentOffset != 0) {
+                    startOffset = loadingRequest.dataRequest.currentOffset;
+                }
+                
+                if (0 == smallestOffset) {
+                    smallestOffset = startOffset;
+                } else {
+                    smallestOffset = MIN(smallestOffset, startOffset);
+                }
             }
         }
         
+        if (0 != smallestOffset) {
+            long long shouldPushTo = MAX(smallestOffset - [CDVideoDownloadTask VideoBlockSize], 0);
+            [self.task pushOffset:shouldPushTo];
+        }
+        
+        
         [self.requests removeObjectsInArray:completedRequests];
+        
+        if (0 == self.requests.count && 0 != self.shouldSeekToPosition) {
+            [self _seek];
+            
+        }
         
         
         if (CDPlayerStateBuffering == self.state) {
+            NSLog(@"uuuuuuuu  %f", self.player.rate);
             [self.player play];
-            if (self.playerItem.isPlaybackLikelyToKeepUp) {
+            NSLog(@"cccccccc  %f", self.player.rate);
+            if (self.player.rate > 0) {
                 self.state = CDPlayerStatePlaying;
             }
         }
@@ -184,12 +215,13 @@
     
     if (!self.fromLocalFile) {
         self.task.priority = CDVideoDownloadTaskPriorityImmediate;
+        
         [[CDPlayer dispatcher] tryToStartTask:self.task];
     }
     [self.player play];
     self.state = CDPlayerStatePlaying;
     
-    if (!self.playerItem.playbackLikelyToKeepUp && CDVideoDownloadStateLoading == self.task.state) {
+    if (self.player.rate <= 0 && CDVideoDownloadStateLoading == self.task.state) {
         self.state = CDPlayerStateBuffering;
     }
     
@@ -198,6 +230,7 @@
 - (void)pause {
     [self.player pause];
     self.state = CDPlayerStatePause;
+    NSLog(@"iiiiiiiiii  %d", self.player.rate);
 }
 
 - (void)continueToBuffer {
@@ -207,10 +240,20 @@
     [self.player play];
     self.state = CDPlayerStatePlaying;
     
-    if (!self.playerItem.playbackLikelyToKeepUp && CDVideoDownloadStateLoading == self.task.state) {
+    if (self.player.rate <= 0 && CDVideoDownloadStateLoading == self.task.state) {
         self.state = CDPlayerStateBuffering;
     }
     
+}
+
+- (void)_seek {
+    double position = self.shouldSeekToPosition;
+    CGFloat seekTime = [self.task.infoProvider duration] * position;
+    [self.playerItem seekToTime:CMTimeMakeWithSeconds(seekTime, self.playerItem.currentTime.timescale) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+    
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:CDPlayerDidSeekToPositionNotif object:nil];
+    self.shouldSeekToPosition = 0;
 }
 
 - (void)seekToPosition:(double)position {
@@ -219,12 +262,6 @@
     } else if (position > 1) {
         position = 1;
     }
-    
-    CGFloat seekTime = [self.task.infoProvider duration] * position;
-//    seekTime += 0.5;
-    
-    [self.playerItem seekToTime:CMTimeMakeWithSeconds(seekTime, self.playerItem.currentTime.timescale)];
-    NSLog(@"ppppppppp  %f", position);
     
     __weak CDPlayer *wself = self;
     
@@ -250,10 +287,47 @@
         }
     }];
     
-    if (!found) {
-        
-        [wself.task pushOffset:MAX(0, bytesOffset - [CDVideoDownloadTask VideoBlockSize])];// 往前边挪一边，保证最左边的数据完整
+    self.shouldSeekToPosition = position;
+    if (found) {
+        [self _seek];
+    } else {
+        if (CDVideoDownloadStateLoading != self.task.state) {
+            
+            if (0 == self.requests.count) {
+                [self _seek];
+                long long targetPosition = self.task.totalBytes * position;
+                targetPosition = MAX(targetPosition - [CDVideoDownloadTask VideoBlockSize], 0);
+                [self.task pushOffset:targetPosition];
+                
+            } else {
+                long long smallestOffset = 0;
+                for (AVAssetResourceLoadingRequest *loadingRequest in self.requests) {
+                    long long startOffset = loadingRequest.dataRequest.requestedOffset;
+                    if (loadingRequest.dataRequest.currentOffset != 0) {
+                        startOffset = loadingRequest.dataRequest.currentOffset;
+                    }
+                    
+                    if (0 == smallestOffset) {
+                        smallestOffset = startOffset;
+                    } else {
+                        smallestOffset = MIN(smallestOffset, startOffset);
+                    }
+                }
+                
+                if (0 != smallestOffset) {
+                    long long shouldPushTo = MAX(smallestOffset - [CDVideoDownloadTask VideoBlockSize], 0);
+                    [self.task pushOffset:shouldPushTo];
+                }
+                
+            }
+            
+            self.state = CDPlayerStateBuffering;
+            [self.task load];
+            
+        }
     }
+    
+    
 }
 
 - (void)seekToTime:(CMTime)time {
@@ -268,7 +342,6 @@
         self.state = CDPlayerStateStop;
     }
     
-    
 }
 
 - (BOOL)tryToFeedRequest:(AVAssetResourceLoadingRequest *)loadingRequest {
@@ -278,10 +351,15 @@
         loadingRequest.contentInformationRequest.byteRangeAccessSupported = YES;
         loadingRequest.contentInformationRequest.contentType = CFBridgingRelease(contentType);
         loadingRequest.contentInformationRequest.contentLength = self.task.totalBytes;
-//        loadingRequest.contentInformationRequest.contentLength = 16512030;
+
     }
     
     __block BOOL found = NO;
+    
+    long long startOffset = loadingRequest.dataRequest.requestedOffset;
+    if (loadingRequest.dataRequest.currentOffset != 0) {
+        startOffset = loadingRequest.dataRequest.currentOffset;
+    }
     
     __weak CDPlayer *wself = self;
     [self.task.loadedVideoBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *videoBlock, NSUInteger idx, BOOL *stop) {
@@ -289,13 +367,9 @@
         long long readingDataLength = MIN(loadingRequest.dataRequest.requestedLength, [CDVideoDownloadTask VideoBlockSize]);
 
         
-        long long startOffset = loadingRequest.dataRequest.requestedOffset;
-        if (loadingRequest.dataRequest.currentOffset != 0) {
-            startOffset = loadingRequest.dataRequest.currentOffset;
-        }
         
-        NSLog(@"data request %@", loadingRequest.dataRequest);
-        NSLog(@"ddddddddddd  %@", wself.task.loadedVideoBlocks);
+        NSLog(@"rrrrrrrrrr  %@", loadingRequest.dataRequest);
+        NSLog(@"dddddddddd  %@", wself.task.loadedVideoBlocks);
         
         CDVideoBlock *requestedBlock = [[CDVideoBlock alloc] initWithOffset:startOffset length:readingDataLength];
         if ([videoBlock containsBlock:requestedBlock]) {
@@ -312,13 +386,13 @@
         
     }];
     
+    
+    
     return found;
 }
 
 #pragma load
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
-    
-    
     
     BOOL fed = [self tryToFeedRequest:loadingRequest];
     
