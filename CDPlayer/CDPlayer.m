@@ -199,9 +199,9 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         
         
         if (CDPlayerStateBuffering == self.state) {
-            NSLog(@"uuuuuuuu  %f", self.player.rate);
+            
             [self.player play];
-            NSLog(@"cccccccc  %f", self.player.rate);
+            
             if (self.player.rate > 0) {
                 self.state = CDPlayerStatePlaying;
             }
@@ -230,7 +230,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 - (void)pause {
     [self.player pause];
     self.state = CDPlayerStatePause;
-    NSLog(@"iiiiiiiiii  %d", self.player.rate);
+    
 }
 
 - (void)continueToBuffer {
@@ -368,8 +368,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 
         
         
-        NSLog(@"rrrrrrrrrr  %@", loadingRequest.dataRequest);
-        NSLog(@"dddddddddd  %@", wself.task.loadedVideoBlocks);
+        
         
         CDVideoBlock *requestedBlock = [[CDVideoBlock alloc] initWithOffset:startOffset length:readingDataLength];
         if ([videoBlock containsBlock:requestedBlock]) {
