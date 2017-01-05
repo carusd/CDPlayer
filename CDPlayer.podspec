@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'CDPlayer'
-  s.version          = '0.0.1'
+  s.version          = '1.0.0'
   s.summary          = 'A player that can be caching the playing video'
 
 
