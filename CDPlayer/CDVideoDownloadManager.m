@@ -66,6 +66,13 @@
     
 }
 
+- (void)launchLoading {
+    __weak CDVideoDownloadManager *wself = self;
+    [self.tasks enumerateObjectsUsingBlock:^(CDVideoDownloadTask *task, NSUInteger idx, BOOL *stop) {
+        [wself tryToStartTask:task];
+    }];
+}
+
 - (CDVideoDownloadTask *)loadNextWaitingTask {
     
     __block CDVideoDownloadTask *nextTask = nil;
@@ -83,9 +90,7 @@
     return nextTask;
 }
 
-- (void)launchLoading {
-    
-}
+
 
 // 普通优先级的任务只允许maxConcurrentNum个并行，最高优先级(Immediate)只允许一个并行
 // 实际上，是3+1个并行

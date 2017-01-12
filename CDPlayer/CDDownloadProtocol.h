@@ -54,6 +54,7 @@
 - (BOOL)containsTask:(CDVideoDownloadTask *)task;
 - (long long)sizeInDisk; // 单位为byte
 - (void)clearTasks:(void(^)(void))completion;
+- (void)launchLoading;
 - (void)pauseAllLoadingTasks;
 - (BOOL)loading;
 
