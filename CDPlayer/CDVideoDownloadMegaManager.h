@@ -22,5 +22,5 @@ extern NSString * const CDVideoDownloadDirURLDidChanged;
 - (id<CDVideoDownloadTaskDispatcher>)dispatcherWithTag:(NSString *)tag class:(Class)clazz;
 - (NSMutableArray<CDVideoDownloadTask *> *)tasksWithTag:(NSString *)tag;
 
-
+- (CDVideoDownloadTask *)taskWithInfo:(id<CDVideoInfoProvider>)infoProvider;
 @end

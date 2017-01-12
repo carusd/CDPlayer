@@ -22,6 +22,7 @@
 
 @implementation CDVideoDownloadManager
 @synthesize maxConcurrentNum;
+@synthesize tasks = _tasks;
 
 - (id)initWithTag:(NSString *)tag {
     self = [super init];
@@ -57,6 +58,11 @@
         
     }
     
+    NSLog(@"tag %@", self.tag);
+    
+    NSLog(@"loading tasks %@", [self loadingTasks]);
+    NSLog(@"finished tasks %@", [self finishedTasks]);
+    
     
 }
 
@@ -77,6 +83,9 @@
     return nextTask;
 }
 
+- (void)launchLoading {
+    
+}
 
 // 普通优先级的任务只允许maxConcurrentNum个并行，最高优先级(Immediate)只允许一个并行
 // 实际上，是3+1个并行
@@ -112,9 +121,8 @@
         
         // 自动清理
         if (self.tasks.count > 30) {
+            
             CDVideoDownloadTask *lastTask = self.tasks.firstObject;
-            [lastTask destroy];
-            [self.persistenceManager removeTask:lastTask];
             [self removeTask:lastTask];
         }
         
@@ -126,10 +134,20 @@
         [task removeTag:self.tag];
         [self.tasks removeObject:task];
         
+        NSLog(@"remove %@ from tag %@", task, self.tag);
+        
         if (task.tags.count <= 0) {
             [task destroy];
             [self.persistenceManager removeTask:task];
+            NSLog(@"destroy %@", task);
         }
+    }
+}
+
+- (void)removeTaskWithInfoProvider:(id<CDVideoInfoProvider>)provider {
+    CDVideoDownloadTask *task = [self taskWithInfo:provider];
+    if (task) {
+        [self removeTask:task];
     }
 }
 
@@ -163,6 +181,11 @@
     
     [self addTask:task];
     return task;
+}
+
+- (NSArray<CDVideoDownloadTask *> *)finishedTasks {
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"state == %ld", (long)CDVideoDownloadStateFinished];
+    return [self.tasks filteredArrayUsingPredicate:predicate];
 }
 
 - (NSArray<CDVideoDownloadTask *> *)loadingTasks {

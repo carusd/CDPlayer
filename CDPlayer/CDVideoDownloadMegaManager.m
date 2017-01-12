@@ -125,5 +125,18 @@ NSString * const CDVideoDownloadDirURLDidChanged = @"CDVideoDownloadDirURLDidCha
     
 }
 
+- (CDVideoDownloadTask *)taskWithInfo:(id<CDVideoInfoProvider>)infoProvider {
+    __block CDVideoDownloadTask *result = nil;
+    NSArray *tasks = [self.allTasks copy];
+    [tasks enumerateObjectsUsingBlock:^(CDVideoDownloadTask *task, NSUInteger idx, BOOL *stop) {
+        if ([task.videoURLPath isEqualToString:[infoProvider videoURLPath]]) {
+            result = task;
+            *stop = YES;
+        }
+    }];
+    
+    return result;
+}
+
 
 @end

@@ -50,12 +50,14 @@
 - (void)tryToStartTask:(CDVideoDownloadTask *)task;
 - (void)addTask:(CDVideoDownloadTask *)task;
 - (void)removeTask:(CDVideoDownloadTask *)task;
+- (void)removeTaskWithInfoProvider:(id<CDVideoInfoProvider>)provider;
 - (BOOL)containsTask:(CDVideoDownloadTask *)task;
 - (long long)sizeInDisk; // 单位为byte
 - (void)clearTasks:(void(^)(void))completion;
 - (void)pauseAllLoadingTasks;
 - (BOOL)loading;
 
+- (NSArray<CDVideoDownloadTask *> *)finishedTasks;
 - (NSArray<CDVideoDownloadTask *> *)loadingTasks;
 - (NSArray<CDVideoDownloadTask *> *)allTasks;
 @end

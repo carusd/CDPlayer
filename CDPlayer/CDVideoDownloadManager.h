@@ -11,9 +11,13 @@
 
 typedef void(^AllTasksDidStopped)(void);
 
-@interface CDVideoDownloadManager : NSObject<CDVideoDownloadTaskDispatcher>
+@interface CDVideoDownloadManager : NSObject<CDVideoDownloadTaskDispatcher> {
+    
+    NSMutableArray<CDVideoDownloadTask *> *_tasks;
+}
 
 @property (nonatomic, copy) AllTasksDidStopped allTasksDidStopped;
 
+- (void)launchLoading;
 
 @end

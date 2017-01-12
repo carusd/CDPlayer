@@ -512,6 +512,7 @@ static long long _VideoBlockSize = 100000; // in bytes
     [self notifyStateChanged];
     [self save];
     
+    
 }
 
 - (void)destroy {
