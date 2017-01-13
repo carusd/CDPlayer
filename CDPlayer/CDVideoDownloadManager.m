@@ -9,13 +9,12 @@
 #import "CDVideoDownloadManager.h"
 #import "CDVideoDownloadMegaManager.h"
 #import "CDVideoDownloadTask.h"
+#import <objc/runtime.h>
 
 @interface CDVideoDownloadManager ()
 
 @property (nonatomic, weak) id<CDVideoDownloadTaskPersistenceManager> persistenceManager;
 @property (nonatomic, strong) NSMutableArray<CDVideoDownloadTask *> *tasks;
-
-
 
 @property (nonatomic, copy) NSString *tag;
 @end
@@ -206,10 +205,20 @@
     return self.loadingTasks.count > 0;
 }
 
+- (void)setClearTasksGroup:(dispatch_group_t)clearTasksGroup {
+    objc_setAssociatedObject(self, (__bridge const void *)@"clearTasksGroup", clearTasksGroup, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (dispatch_group_t)clearTasksGroup {
+    return objc_getAssociatedObject(self, (__bridge const void *)@"clearTasksGroup");
+}
+
 - (void)clearTasks:(void (^)(void))completion {
     [self pauseAllLoadingTasks];
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+    dispatch_queue_t clearTasksQueue = dispatch_queue_create("com.caursd.CDPlayer.clearTasks", DISPATCH_QUEUE_SERIAL);
+    
+    void(^clear)(void) = ^{
         for (CDVideoDownloadTask *task in self.tasks) {
             [task removeTag:self.tag];
             
@@ -226,8 +235,18 @@
                 completion();
             }
         });
-        
-    });
+    };
+    
+    if (self.clearTasksGroup) {
+        dispatch_group_async(self.clearTasksGroup, clearTasksQueue, ^{
+            clear();
+        });
+    } else {
+        dispatch_async(clearTasksQueue, ^{
+            clear();
+        });
+    }
+    
     
 }
 

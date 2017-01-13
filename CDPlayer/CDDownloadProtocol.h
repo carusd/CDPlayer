@@ -61,6 +61,8 @@
 - (NSArray<CDVideoDownloadTask *> *)finishedTasks;
 - (NSArray<CDVideoDownloadTask *> *)loadingTasks;
 - (NSArray<CDVideoDownloadTask *> *)allTasks;
+
+@property (nonatomic, strong) dispatch_group_t clearTasksGroup;
 @end
 
 typedef enum : int64_t {

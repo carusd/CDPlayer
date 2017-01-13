@@ -18,6 +18,8 @@ typedef void(^AllTasksDidStopped)(void);
 
 @property (nonatomic, copy) AllTasksDidStopped allTasksDidStopped;
 
+
+
 - (void)launchLoading;
 
 @end
