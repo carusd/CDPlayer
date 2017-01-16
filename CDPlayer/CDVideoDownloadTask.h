@@ -47,6 +47,10 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 - (void)addTag:(NSString *)tag;
 - (void)removeTag:(NSString *)tag;
 
+
+- (void)save;
+
+
 - (void)load;
 - (void)yield;
 - (void)pause;
