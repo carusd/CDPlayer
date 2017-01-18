@@ -87,6 +87,10 @@ static long long _VideoBlockSize = 100000; // in bytes
         self.createTime = [[NSDate date] timeIntervalSince1970];
         
         [self prepare];
+        
+        NSURL *writingURL = [NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.localURLPath]];
+        NSError *e = nil;
+        self.fileHandle = [NSFileHandle fileHandleForWritingToURL:writingURL error:&e];
     }
     
     return self;
@@ -123,6 +127,10 @@ static long long _VideoBlockSize = 100000; // in bytes
         self.httpManager.responseSerializer = [AFHTTPResponseSerializer serializer];
         self.httpManager.responseSerializer.acceptableContentTypes = [NSSet setWithObject:@"video/mp4"];
         self.httpManager.completionQueue = self.cache_queue;
+        
+        NSURL *writingURL = [NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.localURLPath]];
+        NSError *e = nil;
+        self.fileHandle = [NSFileHandle fileHandleForWritingToURL:writingURL error:&e];
         
     }
     
@@ -200,12 +208,6 @@ static long long _VideoBlockSize = 100000; // in bytes
     
     [[NSFileManager defaultManager] createFileAtPath:[self absolutePathWithRelativePath:self.localURLPath] contents:nil attributes:nil];
     
-    
-
-    
-    NSURL *writingURL = [NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.localURLPath]];
-    NSError *e = nil;
-    self.fileHandle = [NSFileHandle fileHandleForWritingToURL:writingURL error:&e];;
     
     
     [self save];
@@ -454,6 +456,7 @@ static long long _VideoBlockSize = 100000; // in bytes
         [wself.fileHandle seekToFileOffset:wself.offset];
         NSLog(@"task offset %lld", wself.offset);
         NSLog(@"file offset %lld", wself.fileHandle.offsetInFile);
+
         [wself.fileHandle writeData:videoBlock];
         wself.offset += task.countOfBytesReceived;
         NSHTTPURLResponse *response = (NSHTTPURLResponse *)task.response;
