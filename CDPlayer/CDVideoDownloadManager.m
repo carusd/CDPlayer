@@ -57,10 +57,10 @@
         
     }
     
-    NSLog(@"tag %@", self.tag);
-    
-    NSLog(@"loading tasks %@", [self loadingTasks]);
-    NSLog(@"finished tasks %@", [self finishedTasks]);
+//    NSLog(@"tag %@", self.tag);
+//    
+//    NSLog(@"loading tasks %@", [self loadingTasks]);
+//    NSLog(@"finished tasks %@", [self finishedTasks]);
     
     
 }

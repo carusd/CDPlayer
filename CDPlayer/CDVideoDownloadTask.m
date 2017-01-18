@@ -414,7 +414,7 @@ static long long _VideoBlockSize = 100000; // in bytes
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
-    NSLog(@"%@ requesting %@, with range %@, with total %lld", self, self.videoURLPath, range, self.totalBytes);
+//    NSLog(@"%@ requesting %@, with range %@, with total %lld", self, self.videoURLPath, range, self.totalBytes);
 //    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:self.videoURLPath]];
 //    [[self.httpManager downloadTaskWithRequest:request progress:nil destination:nil completionHandler:^(NSURLResponse *response, NSURL *filePath, NSError *e) {
 //        if (!e) {
@@ -454,8 +454,8 @@ static long long _VideoBlockSize = 100000; // in bytes
         [wself updateLoadedBlocksWithIncomingBlock:incomingBlock];
         
         [wself.fileHandle seekToFileOffset:wself.offset];
-        NSLog(@"task offset %lld", wself.offset);
-        NSLog(@"file offset %lld", wself.fileHandle.offsetInFile);
+//        NSLog(@"task offset %lld", wself.offset);
+//        NSLog(@"file offset %lld", wself.fileHandle.offsetInFile);
 
         [wself.fileHandle writeData:videoBlock];
         wself.offset += task.countOfBytesReceived;
@@ -464,7 +464,7 @@ static long long _VideoBlockSize = 100000; // in bytes
         NSArray *values = [contentRange componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@" /"]];
         NSString *totalBytesNum = values.lastObject;
         wself.totalBytes = totalBytesNum.longLongValue;
-        NSLog(@"%@ response with range %@", self, contentRange);
+//        NSLog(@"%@ response with range %@", self, contentRange);
         
         [wself save];
         
