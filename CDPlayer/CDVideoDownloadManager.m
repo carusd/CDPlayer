@@ -189,16 +189,12 @@
 
 - (NSArray<CDVideoDownloadTask *> *)finishedTasks {
     NSPredicate *predicate = [NSPredicate predicateWithFormat:@"state == %ld", (long)CDVideoDownloadStateFinished];
-//    return [self.tasks filteredArrayUsingPredicate:predicate];
     
-    NSArray *f = [self.tasks filteredArrayUsingPredicate:predicate];
+    NSSortDescriptor *descriptor = [NSSortDescriptor sortDescriptorWithKey:@"createTime"
+                                                                 ascending:YES];
     
-    NSMutableArray *finishedTasks = [NSMutableArray array];
-    for (CDVideoDownloadTask *task in self.tasks) {
-        if (CDVideoDownloadStateFinished == task.state) {
-            [finishedTasks addObject:task];
-        }
-    }
+    NSArray *f = [[self.tasks filteredArrayUsingPredicate:predicate] sortedArrayUsingDescriptors:@[descriptor]];
+    
     
     return f;
 }

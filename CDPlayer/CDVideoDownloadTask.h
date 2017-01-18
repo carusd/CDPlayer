@@ -10,13 +10,14 @@
 #import "CDDownloadProtocol.h"
 #import <UIKit/UIKit.h>
 #import "CDVideoBlock.h"
-
+#import "AFNetworking.h"
 
 extern NSString * const CDVideoDownloadStateDidChangedNotif;
 extern NSString * const CDVideoDownloadTaskDidHasNewBlockNotif;
 
 extern NSString * const CDVideoDownloadTaskNotifTaskKey;
 
+extern NSString * const CDVideoDownloadBackgroundSessionIdentifier;
 
 typedef void(^HandleDownloadProgress)(CGFloat);
 @interface CDVideoDownloadTask : NSObject<CDVideoInfoProvider, NSCoding>
@@ -25,6 +26,7 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 
 - (id)initWithVideoInfoProvider:(id<CDVideoInfoProvider>)provider taskURLPath:(NSString *)taskURLPath;
 
+@property (nonatomic, readonly) AFHTTPSessionManager *httpManager;
 
 @property (nonatomic, readonly) NSString *taskURLPath;
 @property (readonly) CDVideoDownloadState state;
@@ -40,7 +42,11 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 @property (nonatomic, copy) HandleDownloadProgress handleDownloadProgress;
 @property (nonatomic, copy) NSString *label; // 调试用，默认为视频title
 
+@property (nonatomic) NSTimeInterval createTime;
+
 @property (nonatomic, readonly) id<CDVideoInfoProvider> infoProvider;
+
+@property (nonatomic) NSInteger frequency; // 下载频率，通过添加下载等待时间来控制宽带占用
 
 - (long long)sizeInDisk;
 
@@ -55,11 +61,12 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 - (void)yield;
 - (void)pause;
 
-- (void)destroy; // 删除视频文件，但是不会删除task文件，因为task事实上不能脱离manager存在，他应该被manager管理
-
+- (void)destroy; // 删除视频文件和task文件
 - (void)pushOffset:(long long)offset;
 
 
 + (void)setVideoBlockSize:(long long)size;
 + (long long)VideoBlockSize;
+
+
 @end

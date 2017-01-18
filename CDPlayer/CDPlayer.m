@@ -83,6 +83,9 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
         
         self.player = [AVPlayer playerWithPlayerItem:self.playerItem];
+        if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 10) {
+            self.player.automaticallyWaitsToMinimizeStalling = NO;
+        }
 //        self.player.automaticallyWaitsToMinimizeStalling = NO;
         
         self.playOnWhileKeepUp = YES;
@@ -234,6 +237,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 }
 
 - (void)continueToBuffer {
+    
     self.task.priority = CDVideoDownloadTaskPriorityImmediate;
     [[CDPlayer dispatcher] tryToStartTask:self.task];
     

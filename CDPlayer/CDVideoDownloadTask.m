@@ -7,7 +7,7 @@
 //
 
 #import "CDVideoDownloadTask.h"
-#import "AFNetworking.h"
+
 #import "CDVideoDownloadManager.h"
 
 
@@ -17,7 +17,7 @@ NSString * const CDVideoDownloadTaskDidHasNewBlockNotif = @"CDVideoDownloadTaskD
 
 NSString * const CDVideoDownloadTaskNotifTaskKey = @"CDVideoDownloadTaskNotifTaskKey";
 
-
+NSString * const CDVideoDownloadBackgroundSessionIdentifier = @"CDVideoDownloadBackgroundSessionIdentifier";
 
 
 
@@ -78,12 +78,13 @@ static long long _VideoBlockSize = 100000; // in bytes
         self.cache_queue = dispatch_queue_create([self.videoURLPath UTF8String], DISPATCH_QUEUE_CONCURRENT);
         
         
+//        self.httpManager = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"com.carusd.backgroundsession"]];
         self.httpManager = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
         self.httpManager.responseSerializer = [AFHTTPResponseSerializer serializer];
         self.httpManager.responseSerializer.acceptableContentTypes = [NSSet setWithObject:@"video/mp4"];
         self.httpManager.completionQueue = self.cache_queue;
         
-        
+        self.createTime = [[NSDate date] timeIntervalSince1970];
         
         [self prepare];
     }
@@ -112,6 +113,7 @@ static long long _VideoBlockSize = 100000; // in bytes
         self.taskTags = [aDecoder decodeObjectForKey:@"taskTags"];
         self.error = [aDecoder decodeObjectForKey:@"error"];
         self.label = [aDecoder decodeObjectForKey:@"label"];
+        self.createTime = [aDecoder decodeDoubleForKey:@"createTime"];
         
         self.infoProvider = [aDecoder decodeObjectForKey:@"infoProvider"];
         
@@ -140,7 +142,9 @@ static long long _VideoBlockSize = 100000; // in bytes
     [aCoder encodeObject:self.taskTags forKey:@"taskTags"];
     [aCoder encodeObject:self.error forKey:@"error"];
     [aCoder encodeObject:self.label forKey:@"label"];
+    [aCoder encodeDouble:self.createTime forKey:@"createTime"];
     [aCoder encodeObject:self.infoProvider forKey:@"infoProvider"];
+    
     
 }
 
@@ -208,10 +212,10 @@ static long long _VideoBlockSize = 100000; // in bytes
 }
 
 - (void)load {
+    self.state = CDVideoDownloadStateLoading;
+    [self notifyStateChanged];
+    [self save];
     dispatch_async(self.cache_queue, ^{
-        self.state = CDVideoDownloadStateLoading;
-        [self notifyStateChanged];
-        [self save];
         
         while (true) {
             self.offset = [self popOffset];
@@ -224,7 +228,10 @@ static long long _VideoBlockSize = 100000; // in bytes
                     [wself save];
                     
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        [[NSNotificationCenter defaultCenter] postNotificationName:CDVideoDownloadTaskDidHasNewBlockNotif object:nil userInfo:@{CDVideoDownloadTaskNotifTaskKey: wself}];
+                        if (CDVideoDownloadStateLoading == wself.state) {
+                            [[NSNotificationCenter defaultCenter] postNotificationName:CDVideoDownloadTaskDidHasNewBlockNotif object:nil userInfo:@{CDVideoDownloadTaskNotifTaskKey: wself}];
+                        }
+                        
                     });
                     
                     *stop = YES;
@@ -247,13 +254,12 @@ static long long _VideoBlockSize = 100000; // in bytes
             
             // 完整下载好了
             if (self.completelyLoaded) {
+                
                 [self finish];
             }
         }
         
     });
-    
-    
     
 }
 
@@ -406,7 +412,38 @@ static long long _VideoBlockSize = 100000; // in bytes
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
-    NSLog(@"%@ requesting %@, with range %@", self, self.videoURLPath, range);
+    NSLog(@"%@ requesting %@, with range %@, with total %lld", self, self.videoURLPath, range, self.totalBytes);
+//    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:self.videoURLPath]];
+//    [[self.httpManager downloadTaskWithRequest:request progress:nil destination:nil completionHandler:^(NSURLResponse *response, NSURL *filePath, NSError *e) {
+//        if (!e) {
+//            CDVideoBlock *incomingBlock = [[CDVideoBlock alloc] initWithOffset:wself.offset length:task.countOfBytesReceived];
+//            [wself updateLoadedBlocksWithIncomingBlock:incomingBlock];
+//            
+//            [wself.fileHandle seekToFileOffset:wself.offset];
+//            NSLog(@"task offset %lld", wself.offset);
+//            NSLog(@"file offset %lld", wself.fileHandle.offsetInFile);
+//            [wself.fileHandle writeData:videoBlock];
+//            wself.offset += task.countOfBytesReceived;
+//            NSHTTPURLResponse *response = (NSHTTPURLResponse *)task.response;
+//            NSString *contentRange = response.allHeaderFields[@"Content-Range"];
+//            NSArray *values = [contentRange componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@" /"]];
+//            NSString *totalBytesNum = values.lastObject;
+//            wself.totalBytes = totalBytesNum.longLongValue;
+//            NSLog(@"%@ response with range %@", self, contentRange);
+//            
+//            [wself save];
+//        } else {
+//            [wself loadError];
+//            wself.error = e;
+//        }
+//    }] resume];
+    
+    
+//    [self.httpManager setDidFinishEventsForBackgroundURLSessionBlock:^(NSURLSession *session) {
+//        
+//        NSLog(@"ffffffffff");
+//    }];
+    
     [self.httpManager GET:self.videoURLPath parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
         
         
@@ -438,6 +475,8 @@ static long long _VideoBlockSize = 100000; // in bytes
         dispatch_semaphore_signal(semaphore);
     }];
     
+    
+    
     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
     
     if (self.handleDownloadProgress) {
@@ -448,6 +487,8 @@ static long long _VideoBlockSize = 100000; // in bytes
         [[NSNotificationCenter defaultCenter] postNotificationName:CDVideoDownloadTaskDidHasNewBlockNotif object:nil userInfo:@{CDVideoDownloadTaskNotifTaskKey: self}];
     });
     
+    
+    sleep(self.frequency);
     
     return;
 }
@@ -512,6 +553,8 @@ static long long _VideoBlockSize = 100000; // in bytes
     [self notifyStateChanged];
     [self save];
     
+    NSDictionary *info = [[NSFileManager defaultManager] attributesOfItemAtPath:[self absolutePathWithRelativePath:self.localURLPath] error:nil];
+    NSLog(@"finished video size %@", info);
     
 }
 
