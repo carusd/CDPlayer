@@ -221,7 +221,7 @@ static long long _VideoBlockSize = 100000; // in bytes
         
         while (true) {
             self.offset = [self popOffset];
-            
+            NSLog(@"requesting offset %lld", self.offset);
             // 跳过已经下载好的部分
             __weak CDVideoDownloadTask *wself = self;
             [self.loadedBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *block, NSUInteger idx, BOOL *stop) {
