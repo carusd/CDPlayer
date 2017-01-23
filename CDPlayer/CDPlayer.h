@@ -26,7 +26,7 @@ extern NSString * const CDPlayerDidSeekToPositionNotif;
 @property (nonatomic ,readonly) BOOL fromLocalFile;
 
 @property (nonatomic) BOOL playOnWhileKeepUp;
-
+@property (nonatomic) BOOL allowLoadingInWWAN;
 
 
 @property (nonatomic, readonly) CDVideoDownloadTask *task;
@@ -40,7 +40,7 @@ extern NSString * const CDPlayerDidSeekToPositionNotif;
 
 - (void)continueToBuffer; // 因为错误被迫停止，需要重新开始加载的时候，调用这个方法
 
-- (void)seekToPosition:(double)position;
-- (void)seekToTime:(CMTime)time;
+- (BOOL)seekToPosition:(double)position;
+
 
 @end

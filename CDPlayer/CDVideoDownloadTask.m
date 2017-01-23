@@ -471,9 +471,10 @@ static long long _VideoBlockSize = 100000; // in bytes
         
         dispatch_semaphore_signal(semaphore);
     } failure:^(NSURLSessionDataTask *task, NSError *e) {
-//        NSLog(@"%@ response with error  %@", self, e);
-        [wself loadError];
+        NSLog(@"%@ response with error  %@", self, e);
         wself.error = e;
+        [wself loadError];
+        
         
         dispatch_semaphore_signal(semaphore);
     }];

@@ -36,7 +36,6 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 @property (nonatomic) BOOL shouldPushOffset;
 
 @property (nonatomic) double shouldSeekToPosition;
-
 @end
 
 @implementation CDPlayer
@@ -86,7 +85,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 10) {
             self.player.automaticallyWaitsToMinimizeStalling = NO;
         }
-//        self.player.automaticallyWaitsToMinimizeStalling = NO;
+        
         
         self.playOnWhileKeepUp = YES;
         
@@ -98,6 +97,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         [self.playerItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:nil];
         [self.playerItem addObserver:self forKeyPath:@"playbackBufferEmpty" options:NSKeyValueObservingOptionNew context:nil];
         [self.playerItem addObserver:self forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:nil];
+//        [self.playerItem addObserver:self forKeyPath:@"timebase" options:NSKeyValueObservingOptionNew context:nil];
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerItemPlaybackStalled:) name:AVPlayerItemPlaybackStalledNotification object:self.playerItem];
     }
@@ -136,18 +136,24 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
             }
         }
     } else if ([keyPath isEqualToString:@"playbackBufferEmpty"]) {
-//        if (self.task.state == CDVideoDownloadStateLoading) {
-//            self.state = CDPlayerStateBuffering;
-//        } else if (self.task.state == CDVideoDownloadStateLoadError) {
+        NSLog(@"ggggggggg");
+        if (self.task.state == CDVideoDownloadStateLoading) {
+            self.state = CDPlayerStateBuffering;
+        } else if (self.task.state == CDVideoDownloadStateLoadError) {
+            
+            self.state = CDPlayerStateError;
 //            // 下载途中失败之后，播放器还是继续在播放，这个时候不应该就马上显示错误
 //            // 而是继续播放，直到playbackBufferEmpty为真，这个时候还是不应该马上
 //            // 显示错误。而是尝试重新下载，重新下载还是失败，在handleTaskStateDidChanged
 //            // 中处理
 //            [self.task load];
 //            self.state = CDPlayerStateBuffering;
-//        }
+        }
         
+    } else if ([keyPath isEqualToString:@"timebase"]) {
+        NSLog(@"gggggggggggg");
     }
+    NSLog(@"kkkkkkkkkkkkk  %@", keyPath);
 }
 
 - (void)handleTaskStateDidChanged:(NSNotification *)notif {
@@ -200,13 +206,16 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         } else {
             
             if (CDPlayerStateBuffering == self.state) {
-                float realRate = CMTimebaseGetRate(self.player.currentItem.timebase);
                 
                 [self.player play];
-                if (realRate > 0) {
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    float realRate = CMTimebaseGetRate(self.player.currentItem.timebase);
                     
-                    self.state = CDPlayerStatePlaying;
-                }
+                    if (realRate > 0) {
+                        
+                        self.state = CDPlayerStatePlaying;
+                    }
+                });
             }
         }
     }
@@ -223,15 +232,18 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     
     
     [self.player play];
-    self.state = CDPlayerStatePlaying;
     
-    
-    
-    float realRate = CMTimebaseGetRate(self.player.currentItem.timebase);
-    if (realRate <= 0 && CDVideoDownloadStateLoading == self.task.state) {
-        self.state = CDPlayerStateBuffering;
-    }
-    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        float realRate = CMTimebaseGetRate(self.player.currentItem.timebase);
+        NSLog(@"ffffffffffff  %f", realRate);
+        if (realRate > 0) {
+            self.state = CDPlayerStatePlaying;
+        } else {
+            if (CDVideoDownloadStateLoading == self.task.state) {
+                self.state = CDPlayerStateBuffering;
+            }
+        }
+    });
 }
 
 - (void)pause {
@@ -246,12 +258,19 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     [[CDPlayer dispatcher] tryToStartTask:self.task];
     
     [self.player play];
-    self.state = CDPlayerStatePlaying;
     
-    float realRate = CMTimebaseGetRate(self.player.currentItem.timebase);
-    if (realRate <= 0 && CDVideoDownloadStateLoading == self.task.state) {
-        self.state = CDPlayerStateBuffering;
-    }
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        float realRate = CMTimebaseGetRate(self.player.currentItem.timebase);
+        
+        if (realRate > 0) {
+            self.state = CDPlayerStatePlaying;
+        } else {
+            if (CDVideoDownloadStateLoading == self.task.state) {
+                self.state = CDPlayerStateBuffering;
+            }
+        }
+    });
+    
     
 }
 
@@ -265,7 +284,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     self.shouldSeekToPosition = 0;
 }
 
-- (void)seekToPosition:(double)position {
+- (BOOL)seekToPosition:(double)position {
     if (position < 0) {
         position = 0;
     } else if (position > 1) {
@@ -299,6 +318,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     self.shouldSeekToPosition = position;
     if (found) {
         [self _seek];
+        return YES;
     } else {
         if (CDVideoDownloadStateLoading != self.task.state) {
             
@@ -307,6 +327,11 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
                 long long targetPosition = self.task.totalBytes * position;
                 targetPosition = MAX(targetPosition - [CDVideoDownloadTask VideoBlockSize], 0);
                 [self.task pushOffset:targetPosition];
+                
+                self.state = CDPlayerStateBuffering;
+                [self.task load];
+                
+                return YES;
                 
             } else {
                 long long smallestOffset = 0;
@@ -328,20 +353,14 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
                     [self.task pushOffset:shouldPushTo];
                 }
                 
+                return NO;
             }
-            
+        } else {
             self.state = CDPlayerStateBuffering;
-            [self.task load];
-            
         }
     }
-    
-    
 }
 
-- (void)seekToTime:(CMTime)time {
-    [self.playerItem seekToTime:time];
-}
 
 - (void)moviePlayDidEnd:(NSNotification *)notif {
     if (self.loop) {
