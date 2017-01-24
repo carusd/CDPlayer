@@ -221,7 +221,7 @@ static long long _VideoBlockSize = 100000; // in bytes
         
         while (true) {
             self.offset = [self popOffset];
-            NSLog(@"requesting offset %lld", self.offset);
+//            NSLog(@"requesting offset %lld", self.offset);
             // 跳过已经下载好的部分
             __weak CDVideoDownloadTask *wself = self;
             [self.loadedBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *block, NSUInteger idx, BOOL *stop) {
@@ -414,7 +414,7 @@ static long long _VideoBlockSize = 100000; // in bytes
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
-    NSLog(@"%@ requesting %@, with range %@, with total %lld", self, self.videoURLPath, range, self.totalBytes);
+//    NSLog(@"%@ requesting %@, with range %@, with total %lld", self, self.videoURLPath, range, self.totalBytes);
 //    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:self.videoURLPath]];
 //    [[self.httpManager downloadTaskWithRequest:request progress:nil destination:nil completionHandler:^(NSURLResponse *response, NSURL *filePath, NSError *e) {
 //        if (!e) {
@@ -464,14 +464,14 @@ static long long _VideoBlockSize = 100000; // in bytes
         NSArray *values = [contentRange componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@" /"]];
         NSString *totalBytesNum = values.lastObject;
         wself.totalBytes = totalBytesNum.longLongValue;
-        NSLog(@"%@ response with range %@", self, contentRange);
+//        NSLog(@"%@ response with range %@", self, contentRange);
         
         [wself save];
         
         
         dispatch_semaphore_signal(semaphore);
     } failure:^(NSURLSessionDataTask *task, NSError *e) {
-        NSLog(@"%@ response with error  %@", self, e);
+//        NSLog(@"%@ response with error  %@", self, e);
         wself.error = e;
         [wself loadError];
         
@@ -558,7 +558,7 @@ static long long _VideoBlockSize = 100000; // in bytes
     [self save];
     
     NSDictionary *info = [[NSFileManager defaultManager] attributesOfItemAtPath:[self absolutePathWithRelativePath:self.localURLPath] error:nil];
-    NSLog(@"finished video size %@", info);
+//    NSLog(@"finished video size %@", info);
     
 }
 
