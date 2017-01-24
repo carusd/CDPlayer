@@ -519,7 +519,7 @@ static long long _VideoBlockSize = 100000; // in bytes
 }
 
 - (void)yield {
-    if (CDVideoDownloadStatePause != self.state && CDVideoDownloadStateStandby != self.state && CDVideoDownloadStateLoading != self.state) {
+    if (CDVideoDownloadStatePause != self.state && CDVideoDownloadStateStandby != self.state && CDVideoDownloadStateLoading != self.state && CDVideoDownloadStateLoadError != self.state) {
         return;
     }
     self.state = CDVideoDownloadStateWaiting;
