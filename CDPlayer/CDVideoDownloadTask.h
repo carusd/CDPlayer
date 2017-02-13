@@ -68,5 +68,10 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 + (void)setVideoBlockSize:(long long)size;
 + (long long)VideoBlockSize;
 
++ (void)setCacheDirectoryName:(NSString *)name;
++ (NSString *)CacheDirectoryName;
+
++ (void)setCachePath:(NSString *)path;
++ (NSString *)CachePath;
 
 @end

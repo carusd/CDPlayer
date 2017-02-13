@@ -52,12 +52,49 @@ NSString * const CDVideoDownloadBackgroundSessionIdentifier = @"CDVideoDownloadB
 @synthesize duration;
 
 static long long _VideoBlockSize = 100000; // in bytes
+static NSString * _CachePath;
+static NSString * _CacheDirectoryName;
+
 + (void)setVideoBlockSize:(long long)size {
     _VideoBlockSize = size;
 }
 
 + (long long)VideoBlockSize {
     return _VideoBlockSize;
+}
+
++ (void)setCacheDirectoryName:(NSString *)name {
+    _CacheDirectoryName = name;
+    [self ensureTargetDirectoryExist];
+}
+
++ (NSString *)CacheDirectoryName {
+    return _CacheDirectoryName;
+}
+
++ (void)setCachePath:(NSString *)path {
+    _CachePath = path;
+    [self ensureTargetDirectoryExist];
+}
+
++ (NSString *)CachePath {
+    return _CachePath;
+}
+
++ (void)ensureTargetDirectoryExist {
+    if (![[NSFileManager defaultManager] fileExistsAtPath:_CachePath]) {
+        NSError *e = nil;
+        [[NSFileManager defaultManager] createDirectoryAtPath:_CachePath withIntermediateDirectories:YES attributes:nil error:&e];
+        NSLog(@"create video cache dir error  %@", e);
+    }
+}
+
++ (void)load {
+    _CacheDirectoryName = @"com.carusd.video";
+    NSString *cachePath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
+    _CachePath = [NSString stringWithFormat:@"%@/%@", cachePath, _CacheDirectoryName];
+    
+    [self ensureTargetDirectoryExist];
 }
 
 - (id)initWithVideoInfoProvider:(id<CDVideoInfoProvider>)provider taskURLPath:(NSString *)taskURLPath {
@@ -221,7 +258,7 @@ static long long _VideoBlockSize = 100000; // in bytes
         
         while (true) {
             self.offset = [self popOffset];
-//            NSLog(@"requesting offset %lld", self.offset);
+            NSLog(@"requesting offset %lld", self.offset);
             // 跳过已经下载好的部分
             __weak CDVideoDownloadTask *wself = self;
             [self.loadedBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *block, NSUInteger idx, BOOL *stop) {
@@ -294,7 +331,7 @@ static long long _VideoBlockSize = 100000; // in bytes
         [result addObject:nVideoBlock];
         
         
-//        NSLog(@"loaded offset %f", nVideoBlock.offset);
+        NSLog(@"loaded offset %f", nVideoBlock.offset);
     }];
     
     return [result copy];
@@ -307,7 +344,7 @@ static long long _VideoBlockSize = 100000; // in bytes
         loadedLength += block.length;
     }];
     
-//    NSLog(@"offset %lld, loaded length %lld", self.offset, loadedLength);
+    NSLog(@"offset %lld, loaded length %lld", self.offset, loadedLength);
     
     if (0 == self.totalBytes) {
         return self.totalBytes;
@@ -414,38 +451,8 @@ static long long _VideoBlockSize = 100000; // in bytes
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
-//    NSLog(@"%@ requesting %@, with range %@, with total %lld", self, self.videoURLPath, range, self.totalBytes);
-//    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:self.videoURLPath]];
-//    [[self.httpManager downloadTaskWithRequest:request progress:nil destination:nil completionHandler:^(NSURLResponse *response, NSURL *filePath, NSError *e) {
-//        if (!e) {
-//            CDVideoBlock *incomingBlock = [[CDVideoBlock alloc] initWithOffset:wself.offset length:task.countOfBytesReceived];
-//            [wself updateLoadedBlocksWithIncomingBlock:incomingBlock];
-//            
-//            [wself.fileHandle seekToFileOffset:wself.offset];
-//            NSLog(@"task offset %lld", wself.offset);
-//            NSLog(@"file offset %lld", wself.fileHandle.offsetInFile);
-//            [wself.fileHandle writeData:videoBlock];
-//            wself.offset += task.countOfBytesReceived;
-//            NSHTTPURLResponse *response = (NSHTTPURLResponse *)task.response;
-//            NSString *contentRange = response.allHeaderFields[@"Content-Range"];
-//            NSArray *values = [contentRange componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@" /"]];
-//            NSString *totalBytesNum = values.lastObject;
-//            wself.totalBytes = totalBytesNum.longLongValue;
-//            NSLog(@"%@ response with range %@", self, contentRange);
-//            
-//            [wself save];
-//        } else {
-//            [wself loadError];
-//            wself.error = e;
-//        }
-//    }] resume];
-    
-    
-//    [self.httpManager setDidFinishEventsForBackgroundURLSessionBlock:^(NSURLSession *session) {
-//        
-//        NSLog(@"ffffffffff");
-//    }];
-    
+    NSLog(@"%@ requesting %@, with range %@, with total %lld", self, self.videoURLPath, range, self.totalBytes);
+
     [self.httpManager GET:self.videoURLPath parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
         
         
@@ -454,8 +461,8 @@ static long long _VideoBlockSize = 100000; // in bytes
         [wself updateLoadedBlocksWithIncomingBlock:incomingBlock];
         
         [wself.fileHandle seekToFileOffset:wself.offset];
-//        NSLog(@"task offset %lld", wself.offset);
-//        NSLog(@"file offset %lld", wself.fileHandle.offsetInFile);
+        NSLog(@"task offset %lld", wself.offset);
+        NSLog(@"file offset %lld", wself.fileHandle.offsetInFile);
 
         [wself.fileHandle writeData:videoBlock];
         wself.offset += task.countOfBytesReceived;
@@ -464,14 +471,14 @@ static long long _VideoBlockSize = 100000; // in bytes
         NSArray *values = [contentRange componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@" /"]];
         NSString *totalBytesNum = values.lastObject;
         wself.totalBytes = totalBytesNum.longLongValue;
-//        NSLog(@"%@ response with range %@", self, contentRange);
+        NSLog(@"%@ response with range %@", self, contentRange);
         
         [wself save];
         
         
         dispatch_semaphore_signal(semaphore);
     } failure:^(NSURLSessionDataTask *task, NSError *e) {
-//        NSLog(@"%@ response with error  %@", self, e);
+        NSLog(@"%@ response with error  %@", self, e);
         wself.error = e;
         [wself loadError];
         

@@ -215,12 +215,14 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
             if (CDPlayerStateBuffering == self.state) {
                 
                 [self.player play];
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                self.state = CDPlayerStatePlaying;
+                
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     float realRate = CMTimebaseGetRate(self.player.currentItem.timebase);
                     
-                    if (realRate > 0) {
+                    if (realRate <= 0) {
                         
-                        self.state = CDPlayerStatePlaying;
+                        self.state = CDPlayerStateBuffering;
                     }
                 });
             }
@@ -239,18 +241,26 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     
     
     [self.player play];
+    self.state = CDPlayerStatePlaying;
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        float realRate = CMTimebaseGetRate(self.player.currentItem.timebase);
-//        NSLog(@"ffffffffffff  %f", realRate);
-        if (realRate > 0) {
-            self.state = CDPlayerStatePlaying;
-        } else {
-            if (CDVideoDownloadStateLoading == self.task.state) {
-                self.state = CDPlayerStateBuffering;
-            }
+        float rate = self.player.rate;
+        
+        if (rate <= 0 && CDVideoDownloadStateLoading == self.task.state) {
+            self.state = CDPlayerStateBuffering;
         }
     });
+    
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//        float realRate = CMTimebaseGetRate(self.player.currentItem.timebase);
+//        if (realRate > 0) {
+//            self.state = CDPlayerStatePlaying;
+//        } else {
+//            if (CDVideoDownloadStateLoading == self.task.state) {
+//                self.state = CDPlayerStateBuffering;
+//            }
+//        }
+//    });
 }
 
 - (void)pause {
@@ -265,20 +275,15 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     [[CDPlayer dispatcher] tryToStartTask:self.task];
     
     [self.player play];
+    self.state = CDPlayerStatePlaying;
     
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        float realRate = CMTimebaseGetRate(self.player.currentItem.timebase);
-        
-        if (realRate > 0) {
-            self.state = CDPlayerStatePlaying;
-        } else {
-            if (CDVideoDownloadStateLoading == self.task.state) {
-                self.state = CDPlayerStateBuffering;
-            }
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        float rate = self.player.rate;
+        NSLog(@"rrrrrrrrr  %f", rate);
+        if (rate <= 0 && CDVideoDownloadStateLoading == self.task.state) {
+            self.state = CDPlayerStateBuffering;
         }
     });
-    
-    
 }
 
 - (void)_seek {
@@ -379,6 +384,14 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 
 - (void)moviePlayDidEnd:(NSNotification *)notif {
     if (self.loop) {
+        
+        if (!self.fromLocalFile) {
+            self.task.priority = CDVideoDownloadTaskPriorityImmediate;
+            [self.task pushOffset:0];
+            [[CDPlayer dispatcher] tryToStartTask:self.task];
+        }
+        
+        
         [self.playerItem seekToTime:kCMTimeZero];
         [self.player play];
     } else {
@@ -437,7 +450,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 
 #pragma load
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
-//    NSLog(@"loading request %@", loadingRequest);
+    NSLog(@"loading request %@", loadingRequest);
     BOOL fed = [self tryToFeedRequest:loadingRequest];
     
     if (!fed) {
