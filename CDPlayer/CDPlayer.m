@@ -250,7 +250,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         float rate = self.player.rate;
-        
+        NSLog(@"ffffffffff  %f", rate);
         if (rate <= 0 && CDVideoDownloadStateLoading == self.task.state) {
             self.state = CDPlayerStateBuffering;
         }
@@ -319,82 +319,88 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         position = 1;
     }
     
-    __weak CDPlayer *wself = self;
-    
-    // 寻找目标位置的数据是否已经下载完，没有的话需要将task.offset定位到这个地方，从这里开始下载
-    
-    long long bytesOffset = self.task.totalBytes * position;
-    __block BOOL found = NO;
-    [self.task.loadedVideoBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *videoBlock, NSUInteger idx, BOOL *stop) {
-        if ([videoBlock containsPosition:bytesOffset]) {
-            found = YES;
-            
-            if (videoBlock.offset + videoBlock.length < wself.task.totalBytes) {
-                [wself.task pushOffset:videoBlock.offset + videoBlock.length - 1];
-                
-                if (CDVideoDownloadStateLoading != wself.task.state) {
-                    [wself.task load];
-                }
-                
-            }
-            
-            *stop = YES;
-            
-        }
-    }];
-    
-    self.shouldSeekToPosition = position;
-    if (found) {
+    if (self.fromLocalFile) {
+        self.shouldSeekToPosition = position;
         [self _seek];
-        return YES;
     } else {
+        __weak CDPlayer *wself = self;
         
+        // 寻找目标位置的数据是否已经下载完，没有的话需要将task.offset定位到这个地方，从这里开始下载
         
-        if (CDVideoDownloadStateLoading != self.task.state) {
-            
-            if (0 == self.requests.count) {
-//                [self _seek];
-                long long targetPosition = self.task.totalBytes * position;
-                targetPosition = MAX(targetPosition - [CDVideoDownloadTask VideoBlockSize], 0);
-                [self.task pushOffset:targetPosition];
+        long long bytesOffset = self.task.totalBytes * position;
+        __block BOOL found = NO;
+        [self.task.loadedVideoBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *videoBlock, NSUInteger idx, BOOL *stop) {
+            if ([videoBlock containsPosition:bytesOffset]) {
+                found = YES;
                 
-                self.state = CDPlayerStateBuffering;
-                [self.task load];
-                
-                return NO;
-                
-            } else {
-                long long smallestOffset = 0;
-                for (AVAssetResourceLoadingRequest *loadingRequest in self.requests) {
-                    long long startOffset = loadingRequest.dataRequest.requestedOffset;
-                    if (loadingRequest.dataRequest.currentOffset != 0) {
-                        startOffset = loadingRequest.dataRequest.currentOffset;
+                if (videoBlock.offset + videoBlock.length < wself.task.totalBytes) {
+                    [wself.task pushOffset:videoBlock.offset + videoBlock.length - 1];
+                    
+                    if (CDVideoDownloadStateLoading != wself.task.state) {
+                        [wself.task load];
                     }
                     
-                    if (0 == smallestOffset) {
-                        smallestOffset = startOffset;
-                    } else {
-                        smallestOffset = MIN(smallestOffset, startOffset);
+                }
+                
+                *stop = YES;
+                
+            }
+        }];
+        
+        self.shouldSeekToPosition = position;
+        if (found) {
+            [self _seek];
+            return YES;
+        } else {
+            
+            
+            if (CDVideoDownloadStateLoading != self.task.state) {
+                
+                if (0 == self.requests.count) {
+                    //                [self _seek];
+                    long long targetPosition = self.task.totalBytes * position;
+                    targetPosition = MAX(targetPosition - [CDVideoDownloadTask VideoBlockSize], 0);
+                    [self.task pushOffset:targetPosition];
+                    
+                    self.state = CDPlayerStateBuffering;
+                    [self.task load];
+                    
+                    return NO;
+                    
+                } else {
+                    long long smallestOffset = 0;
+                    for (AVAssetResourceLoadingRequest *loadingRequest in self.requests) {
+                        long long startOffset = loadingRequest.dataRequest.requestedOffset;
+                        if (loadingRequest.dataRequest.currentOffset != 0) {
+                            startOffset = loadingRequest.dataRequest.currentOffset;
+                        }
+                        
+                        if (0 == smallestOffset) {
+                            smallestOffset = startOffset;
+                        } else {
+                            smallestOffset = MIN(smallestOffset, startOffset);
+                        }
                     }
+                    
+                    if (0 != smallestOffset) {
+                        long long shouldPushTo = MAX(smallestOffset - [CDVideoDownloadTask VideoBlockSize], 0);
+                        [self.task pushOffset:shouldPushTo];
+                    }
+                    
+                    self.state = CDPlayerStateBuffering;
+                    
+                    return NO;
                 }
-                
-                if (0 != smallestOffset) {
-                    long long shouldPushTo = MAX(smallestOffset - [CDVideoDownloadTask VideoBlockSize], 0);
-                    [self.task pushOffset:shouldPushTo];
-                }
-                
+            } else {
                 self.state = CDPlayerStateBuffering;
                 
                 return NO;
             }
-        } else {
-            self.state = CDPlayerStateBuffering;
             
-            return NO;
+            
         }
-        
-        
     }
+    
 }
 
 

@@ -331,7 +331,7 @@ static NSString * _CacheDirectoryName;
         [result addObject:nVideoBlock];
         
         
-        NSLog(@"loaded offset %f", nVideoBlock.offset);
+        
     }];
     
     return [result copy];
@@ -344,7 +344,7 @@ static NSString * _CacheDirectoryName;
         loadedLength += block.length;
     }];
     
-    NSLog(@"offset %lld, loaded length %lld", self.offset, loadedLength);
+    
     
     if (0 == self.totalBytes) {
         return self.totalBytes;
