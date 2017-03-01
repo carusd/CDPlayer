@@ -304,7 +304,14 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 
 - (void)_seek {
     double position = self.shouldSeekToPosition;
-    CGFloat seekTime = [self.task.infoProvider duration] * position;
+    
+    CGFloat seekTime;
+    if (self.fromLocalFile) {
+        seekTime = CMTimeGetSeconds(self.asset.duration) * position;
+    } else {
+        seekTime = [self.task.infoProvider duration] * position;
+    }
+    
     [self.playerItem seekToTime:CMTimeMakeWithSeconds(seekTime, self.playerItem.currentTime.timescale) toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
     
     
@@ -322,6 +329,8 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     if (self.fromLocalFile) {
         self.shouldSeekToPosition = position;
         [self _seek];
+        
+        return YES;
     } else {
         __weak CDPlayer *wself = self;
         
