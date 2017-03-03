@@ -85,7 +85,7 @@ static NSString * _CacheDirectoryName;
     if (![[NSFileManager defaultManager] fileExistsAtPath:_CachePath]) {
         NSError *e = nil;
         [[NSFileManager defaultManager] createDirectoryAtPath:_CachePath withIntermediateDirectories:YES attributes:nil error:&e];
-        NSLog(@"create video cache dir error  %@", e);
+//        NSLog(@"create video cache dir error  %@", e);
     }
 }
 
@@ -258,7 +258,7 @@ static NSString * _CacheDirectoryName;
         
         while (true) {
             self.offset = [self popOffset];
-            NSLog(@"requesting offset %lld", self.offset);
+//            NSLog(@"requesting offset %lld", self.offset);
             // 跳过已经下载好的部分
             __weak CDVideoDownloadTask *wself = self;
             [self.loadedBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *block, NSUInteger idx, BOOL *stop) {
@@ -451,18 +451,17 @@ static NSString * _CacheDirectoryName;
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
-    NSLog(@"%@ requesting %@, with range %@, with total %lld", self, self.videoURLPath, range, self.totalBytes);
+//    NSLog(@"%@ requesting %@, with range %@, with total %lld", self, self.videoURLPath, range, self.totalBytes);
 
     [self.httpManager GET:self.videoURLPath parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
         
-        
+#warning todo 有非常小的几率服务器返回的content range不是请求头里的，我后面有时间再回头看看，导致视频会花屏
         
         CDVideoBlock *incomingBlock = [[CDVideoBlock alloc] initWithOffset:wself.offset length:task.countOfBytesReceived];
         [wself updateLoadedBlocksWithIncomingBlock:incomingBlock];
         
         [wself.fileHandle seekToFileOffset:wself.offset];
-        NSLog(@"task offset %lld", wself.offset);
-        NSLog(@"file offset %lld", wself.fileHandle.offsetInFile);
+//            NSLog(@"file offset %lld", wself.fileHandle.offsetInFile);
 
         [wself.fileHandle writeData:videoBlock];
         wself.offset += task.countOfBytesReceived;
@@ -471,14 +470,14 @@ static NSString * _CacheDirectoryName;
         NSArray *values = [contentRange componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@" /"]];
         NSString *totalBytesNum = values.lastObject;
         wself.totalBytes = totalBytesNum.longLongValue;
-        NSLog(@"%@ response with range %@", self, contentRange);
+//        NSLog(@"%@ response with range %@", self, contentRange);
         
         [wself save];
         
         
         dispatch_semaphore_signal(semaphore);
     } failure:^(NSURLSessionDataTask *task, NSError *e) {
-        NSLog(@"%@ response with error  %@", self, e);
+//        NSLog(@"%@ response with error  %@", self, e);
         wself.error = e;
         [wself loadError];
         

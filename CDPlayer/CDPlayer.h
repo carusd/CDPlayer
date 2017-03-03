@@ -31,6 +31,7 @@ extern NSString * const CDPlayerDidSeekToPositionNotif;
 
 @property (nonatomic, readonly) CDVideoDownloadTask *task;
 
+- (void)replaceCurrentVideoWithVideo:(id<CDVideoInfoProvider>)infoProvider;
 
 + (NSString *)dispatcherTag;
 + (id<CDVideoDownloadTaskDispatcher>)dispatcher;

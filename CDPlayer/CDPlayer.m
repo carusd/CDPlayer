@@ -56,30 +56,57 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 - (id)initWithInfo:(id<CDVideoInfoProvider>)infoProvider {
     self = [super init];
     if (self) {
-        NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
-        NSString *localURLPath = [NSString stringWithFormat:@"%@/%@", prefix, infoProvider.localURLPath];
+        [self setupWithInfoProvider:infoProvider];
         
-        if (infoProvider.completelyLoaded) {
-            self.asset = [AVURLAsset assetWithURL:[NSURL fileURLWithPath:localURLPath]];
-            self.fromLocalFile = YES;
-        } else {
-            
-            self.task = [[CDPlayer dispatcher] makeTaskWithInfo:infoProvider];
-            [self.task pushOffset:0]; // 有些任务可能是下载到一半的，这里重置下载位置，确保开始的播放
-            
-            
-            NSURLComponents *videoURLComponents = [[NSURLComponents alloc] initWithURL:[NSURL URLWithString:self.task.videoURLPath] resolvingAgainstBaseURL:NO];
-            videoURLComponents.scheme = @"streaming";
-            self.asset = [AVURLAsset assetWithURL:videoURLComponents.URL];
-            [self.asset.resourceLoader setDelegate:self queue:dispatch_get_main_queue()];
-            
-            NSError *e = nil;
-            self.fileHandle = [NSFileHandle fileHandleForReadingFromURL:[NSURL fileURLWithPath:localURLPath] error:&e];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleTaskDidHasNewBlock:) name:CDVideoDownloadTaskDidHasNewBlockNotif object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleTaskStateDidChanged:) name:CDVideoDownloadStateDidChangedNotif object:nil];
+    }
+    
+    return self;
+}
 
-            
-            self.fromLocalFile = NO;
-        }
+- (void)replaceCurrentVideoWithVideo:(id<CDVideoInfoProvider>)infoProvider {
+    [self.playerItem removeObserver:self forKeyPath:@"status"];
+    [self.playerItem removeObserver:self forKeyPath:@"playbackBufferEmpty"];
+    [self.playerItem removeObserver:self forKeyPath:@"playbackLikelyToKeepUp"];
+    
+    
+    [self setupWithInfoProvider:infoProvider];
+}
+
+- (void)setupWithInfoProvider:(id<CDVideoInfoProvider>)infoProvider {
+    NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
+    NSString *localURLPath = [NSString stringWithFormat:@"%@/%@", prefix, infoProvider.localURLPath];
+    
+    if (infoProvider.completelyLoaded) {
+        self.asset = [AVURLAsset assetWithURL:[NSURL fileURLWithPath:localURLPath]];
+        self.fromLocalFile = YES;
+    } else {
         
+        self.task = [[CDPlayer dispatcher] makeTaskWithInfo:infoProvider];
+        [self.task pushOffset:0]; // 有些任务可能是下载到一半的，这里重置下载位置，确保开始的播放
+        
+        
+        NSURLComponents *videoURLComponents = [[NSURLComponents alloc] initWithURL:[NSURL URLWithString:self.task.videoURLPath] resolvingAgainstBaseURL:NO];
+        videoURLComponents.scheme = @"streaming";
+        self.asset = [AVURLAsset assetWithURL:videoURLComponents.URL];
+        [self.asset.resourceLoader setDelegate:self queue:dispatch_get_main_queue()];
+        
+        NSError *e = nil;
+        self.fileHandle = [NSFileHandle fileHandleForReadingFromURL:[NSURL fileURLWithPath:localURLPath] error:&e];
+        
+        
+        self.fromLocalFile = NO;
+    }
+    
+    if (self.playerItem) {
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
+        AVPlayerItem *playerItem = [AVPlayerItem playerItemWithAsset:self.asset];
+        [self.player replaceCurrentItemWithPlayerItem:playerItem];
+        self.playerItem = playerItem;
+        
+    } else {
         self.playerItem = [AVPlayerItem playerItemWithAsset:self.asset];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
         
@@ -87,26 +114,17 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 10) {
             self.player.automaticallyWaitsToMinimizeStalling = NO;
         }
-        
-        
-        self.playOnWhileKeepUp = YES;
-        
-        self.requests = [NSMutableArray array];
-        
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleTaskDidHasNewBlock:) name:CDVideoDownloadTaskDidHasNewBlockNotif object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleTaskStateDidChanged:) name:CDVideoDownloadStateDidChangedNotif object:nil];
-        
-        [self.playerItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:nil];
-        [self.playerItem addObserver:self forKeyPath:@"playbackBufferEmpty" options:NSKeyValueObservingOptionNew context:nil];
-        [self.playerItem addObserver:self forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:nil];
-        
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerItemPlaybackStalled:) name:AVPlayerItemPlaybackStalledNotification object:self.playerItem];
     }
     
-    return self;
+    
+    self.playOnWhileKeepUp = YES;
+    
+    self.requests = [NSMutableArray array];
+    
+    [self.playerItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:nil];
+    [self.playerItem addObserver:self forKeyPath:@"playbackBufferEmpty" options:NSKeyValueObservingOptionNew context:nil];
+    [self.playerItem addObserver:self forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:nil];
 }
-
-
 
 + (NSString *)dispatcherTag {
     return @"player";
@@ -116,9 +134,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     return [[CDVideoDownloadMegaManager sharedInstance] dispatcherWithTag:[CDPlayer dispatcherTag] class:nil];
 }
 
-- (void)playerItemPlaybackStalled:(NSNotification *)notif {
-    
-}
+
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
     
@@ -250,7 +266,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         float rate = self.player.rate;
-        NSLog(@"ffffffffff  %f", rate);
+//        NSLog(@"ffffffffff  %f", rate);
         if (rate <= 0 && CDVideoDownloadStateLoading == self.task.state) {
             self.state = CDPlayerStateBuffering;
         }
