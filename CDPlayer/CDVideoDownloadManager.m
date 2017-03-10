@@ -98,6 +98,7 @@
         return;
     }
     if (self.loadingTasks.count < self.maxConcurrentNum) {
+        
         [task load];
         
     } else if (CDVideoDownloadTaskPriorityImmediate == task.priority){

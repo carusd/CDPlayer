@@ -36,6 +36,8 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 @property (nonatomic) BOOL shouldPushOffset;
 
 @property (nonatomic) double shouldSeekToPosition;
+
+
 @end
 
 @implementation CDPlayer
@@ -58,6 +60,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     if (self) {
         [self setupWithInfoProvider:infoProvider];
         
+        self.state = CDPlayerStateStop;
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleTaskDidHasNewBlock:) name:CDVideoDownloadTaskDidHasNewBlockNotif object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleTaskStateDidChanged:) name:CDVideoDownloadStateDidChangedNotif object:nil];
@@ -125,6 +128,8 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     [self.playerItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:nil];
     [self.playerItem addObserver:self forKeyPath:@"playbackBufferEmpty" options:NSKeyValueObservingOptionNew context:nil];
     [self.playerItem addObserver:self forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:nil];
+    
+    
 }
 
 + (NSString *)dispatcherTag {
@@ -156,10 +161,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
             }
         }
     } else if ([keyPath isEqualToString:@"playbackBufferEmpty"]) {
-//        NSLog(@"ggggggggg");
-        if (self.task.state == CDVideoDownloadStateLoading) {
-            self.state = CDPlayerStateBuffering;
-        } else if (self.task.state == CDVideoDownloadStateLoadError) {
+        if (self.task.state == CDVideoDownloadStateLoadError) {
             
             self.state = CDPlayerStateError;
 //            // 下载途中失败之后，播放器还是继续在播放，这个时候不应该就马上显示错误
@@ -189,6 +191,10 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 }
 
 - (void)handleTaskDidHasNewBlock:(NSNotification *)notif {
+    if (CDPlayerStateStop == self.state || CDPlayerStatePause == self.state) {
+        
+        return;
+    }
     CDVideoDownloadTask *task = notif.userInfo[CDVideoDownloadTaskNotifTaskKey];
     if (task == self.task) {
         NSMutableArray *completedRequests = [NSMutableArray array];
@@ -233,17 +239,13 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         if (0 == self.requests.count && 0 != self.shouldSeekToPosition) {
             [self _seek];
         } else {
-            
             if (CDPlayerStateBuffering == self.state) {
-                
                 [self.player play];
                 self.state = CDPlayerStatePlaying;
                 
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                     float realRate = CMTimebaseGetRate(self.player.currentItem.timebase);
-                    
                     if (realRate <= 0) {
-                        
                         self.state = CDPlayerStateBuffering;
                     }
                 });
@@ -307,7 +309,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         float rate = self.player.rate;
-        NSLog(@"rrrrrrrrr  %f", rate);
+        
         if (rate <= 0 && CDVideoDownloadStateLoading == self.task.state) {
             self.state = CDPlayerStateBuffering;
         }
@@ -471,10 +473,6 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     [self.task.loadedVideoBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *videoBlock, NSUInteger idx, BOOL *stop) {
         
         long long readingDataLength = MIN(loadingRequest.dataRequest.requestedLength, [CDVideoDownloadTask VideoBlockSize]);
-
-        
-        
-        
         
         CDVideoBlock *requestedBlock = [[CDVideoBlock alloc] initWithOffset:startOffset length:readingDataLength];
         if ([videoBlock containsBlock:requestedBlock]) {
