@@ -109,7 +109,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
         AVPlayerItem *playerItem = [AVPlayerItem playerItemWithAsset:self.asset];
         [self.player replaceCurrentItemWithPlayerItem:playerItem];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:playerItem];
         self.playerItem = playerItem;
         
     } else {
@@ -446,8 +446,11 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         
         [self.playerItem seekToTime:kCMTimeZero];
         [self.player play];
+        
+        NSLog(@"loop u motherfucker!");
     } else {
         self.state = CDPlayerStateStop;
+        NSLog(@"sssssssss");
     }
     
 }
