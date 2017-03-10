@@ -587,6 +587,6 @@ static NSString * _CacheDirectoryName;
 }
 
 - (NSString *)description {
-    return [NSString stringWithFormat:@"task: %@, state: %lld", self.label, self.state];
+    return [NSString stringWithFormat:@"task: %@, video url %@, state: %lld", self.label, self.videoURLPath, self.state];
 }
 @end

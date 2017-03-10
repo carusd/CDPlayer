@@ -21,6 +21,7 @@
 
 @implementation CDVideoDownloadManager
 @synthesize maxConcurrentNum;
+@synthesize capacity;
 @synthesize tasks = _tasks;
 
 - (id)initWithTag:(NSString *)tag {
@@ -29,6 +30,7 @@
         self.tag = tag;
         
         self.maxConcurrentNum = 3;
+        self.capacity = 30;
         
         self.persistenceManager = [CDVideoDownloadMegaManager sharedInstance];
         self.tasks = [self.persistenceManager tasksWithTag:self.tag];
@@ -98,11 +100,11 @@
         return;
     }
     if (self.loadingTasks.count < self.maxConcurrentNum) {
-        
+        NSLog(@"load ba");
         [task load];
         
     } else if (CDVideoDownloadTaskPriorityImmediate == task.priority){
-        
+        NSLog(@"any way load ba");
         NSArray *loadingTasks = [self loadingTasks];
         for (CDVideoDownloadTask *loadingTask in loadingTasks) {
             if (CDVideoDownloadTaskPriorityImmediate == loadingTask.priority) {
@@ -114,6 +116,7 @@
         
         [task load];
     } else {
+        NSLog(@"no...wait ba");
         [task yield];
     }
 }
@@ -125,7 +128,7 @@
         
         
         // 自动清理
-        if (self.tasks.count > 30) {
+        if (self.tasks.count > self.capacity) {
             
             CDVideoDownloadTask *lastTask = self.tasks.firstObject;
             [self removeTask:lastTask];

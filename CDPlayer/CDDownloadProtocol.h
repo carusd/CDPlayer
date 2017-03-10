@@ -43,6 +43,7 @@
 @property (nonatomic, readonly, weak) id<CDVideoDownloadTaskPersistenceManager> persistenceManager;
 
 @property (nonatomic) NSInteger maxConcurrentNum;
+@property (nonatomic) NSInteger capacity;
 
 - (CDVideoDownloadTask *)taskWithInfo:(id<CDVideoInfoProvider>)provider;
 - (CDVideoDownloadTask *)makeTaskWithInfo:(id<CDVideoInfoProvider>)provider;

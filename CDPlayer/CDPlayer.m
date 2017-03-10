@@ -83,9 +83,11 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     NSString *localURLPath = [NSString stringWithFormat:@"%@/%@", prefix, infoProvider.localURLPath];
     
     if (infoProvider.completelyLoaded) {
+        NSLog(@"completly loaded?");
         self.asset = [AVURLAsset assetWithURL:[NSURL fileURLWithPath:localURLPath]];
         self.fromLocalFile = YES;
     } else {
+        NSLog(@"should load!");
         
         self.task = [[CDPlayer dispatcher] makeTaskWithInfo:infoProvider];
         [self.task pushOffset:0]; // 有些任务可能是下载到一半的，这里重置下载位置，确保开始的播放
