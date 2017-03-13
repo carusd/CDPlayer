@@ -10,7 +10,7 @@
 
 @property (readonly) NSString *videoURLPath;
 @property (readonly) NSString *localURLPath; // 相对Caches的路径，比如说完整路径是/Library/Caches/tmp.mp4, 则这个字段的值应该是tmp.mp4
-
+@property (readonly) NSString *completeLocalPath;
 
 @optional
 
@@ -67,13 +67,14 @@
 @end
 
 typedef enum : int64_t {
-    CDVideoDownloadStateStandby,
+    CDVideoDownloadStateStandby,      // 获取完totalBytes
     CDVideoDownloadStateWaiting,
     CDVideoDownloadStateLoading,
     CDVideoDownloadStatePause,
     CDVideoDownloadStateLoadError,
     CDVideoDownloadStateLoaded,       // 分段下载时，有时候会跳到后面一段继续下载，这时候下载完时其实是不完整的，这种状态用Finished来表示
-    CDVideoDownloadStateFinished     // 不仅仅下载到最后，而且文件是完整下载好的
+    CDVideoDownloadStateFinished,     // 不仅仅下载到最后，而且文件是完整下载好的
+    CDVideoDownloadStateInit          // 刚刚初始化
 } CDVideoDownloadState;
 
 typedef enum : NSUInteger {

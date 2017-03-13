@@ -118,7 +118,7 @@ static NSString * _CacheDirectoryName;
 //        self.httpManager = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"com.carusd.backgroundsession"]];
         self.httpManager = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
         self.httpManager.responseSerializer = [AFHTTPResponseSerializer serializer];
-        self.httpManager.responseSerializer.acceptableContentTypes = [NSSet setWithObject:@"video/mp4"];
+        self.httpManager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"video/mp4", @"text/html", nil];
         self.httpManager.completionQueue = self.cache_queue;
         
         self.createTime = [[NSDate date] timeIntervalSince1970];
@@ -191,6 +191,11 @@ static NSString * _CacheDirectoryName;
     [aCoder encodeObject:self.infoProvider forKey:@"infoProvider"];
     
     
+}
+
+- (NSString *)completeLocalPath {
+    NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
+    return [NSString stringWithFormat:@"%@/%@", prefix, self.localURLPath];
 }
 
 - (NSString *)absolutePathWithRelativePath:(NSString *)path {
@@ -435,12 +440,13 @@ static NSString * _CacheDirectoryName;
     requestSerializer.cachePolicy = NSURLRequestReloadIgnoringCacheData;
     
     NSString *range = nil;
-    if (self.totalBytes > 0 && self.totalBytes - self.offset < _VideoBlockSize * 2) {
-        // 剩下不多的话，一次过全部拿回来了
-        range = [NSString stringWithFormat:@"bytes=%lld-%lld", self.offset, self.totalBytes];
-    } else {
-        range = [NSString stringWithFormat:@"bytes=%lld-%lld", self.offset, self.offset + _VideoBlockSize];
-    }
+//    if (self.totalBytes > 0 && self.totalBytes - self.offset < _VideoBlockSize * 2) {
+//        // 剩下不多的话，一次过全部拿回来了
+//        range = [NSString stringWithFormat:@"bytes=%lld-%lld", self.offset, self.totalBytes];
+//    } else {
+//        range = [NSString stringWithFormat:@"bytes=%lld-%lld", self.offset, self.offset + _VideoBlockSize];
+//    }
+    range = [NSString stringWithFormat:@"bytes=%lld-%lld", self.offset, self.offset + _VideoBlockSize];
     
     
     [requestSerializer setValue:range forHTTPHeaderField:@"Range"];
@@ -451,7 +457,7 @@ static NSString * _CacheDirectoryName;
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
-//    NSLog(@"%@ requesting %@, with range %@, with total %lld", self, self.videoURLPath, range, self.totalBytes);
+    NSLog(@"%@ requesting %@, with range %@, with total %lld", self, self.videoURLPath, range, self.totalBytes);
 
     [self.httpManager GET:self.videoURLPath parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
         
@@ -477,7 +483,7 @@ static NSString * _CacheDirectoryName;
         
         dispatch_semaphore_signal(semaphore);
     } failure:^(NSURLSessionDataTask *task, NSError *e) {
-//        NSLog(@"%@ response with error  %@", self, e);
+        NSLog(@"%@ response with error  %@", self, e);
         wself.error = e;
         [wself loadError];
         
