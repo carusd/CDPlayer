@@ -161,8 +161,11 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
                 self.state = CDPlayerStateBuffering;
             }
         } else {
-            [self.player play];
-            self.state =  CDPlayerStatePlaying;
+            if (CDPlayerStateBuffering == self.state) {
+                [self.player play];
+                self.state =  CDPlayerStatePlaying;
+            }
+            
         }
         NSLog(@"iiiiiiiiiiiiiiiii  %d", self.playerItem.playbackLikelyToKeepUp);
     } else if ([keyPath isEqualToString:@"playbackBufferEmpty"]) {
@@ -279,7 +282,10 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         float rate = self.player.rate;
-//        NSLog(@"ffffffffff  %f", rate);
+        NSLog(@"ffffffffff  %f", rate);
+        NSLog(@"gggggggggg  %f", self.playerItem.isPlaybackLikelyToKeepUp);
+//        NSLog(@"这里不知道为什么有时候不播放，但是偏偏rate=1");
+#warning fixme 这里不知道为什么有时候不播放，但是偏偏rate=1
         if (rate <= 0 && CDVideoDownloadStateLoading == self.task.state) {
             self.state = CDPlayerStateBuffering;
         }
@@ -381,7 +387,6 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
             [self _seek];
             return YES;
         } else {
-            
             
             if (CDVideoDownloadStateLoading != self.task.state) {
                 
@@ -553,7 +558,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
             
             long long currentOffset = loadingRequest.dataRequest.currentOffset;
             
-            NSLog(@"request to the end of resource %d", loadingRequest.dataRequest.requestsAllDataToEndOfResource);
+            
             NSLog(@"fetch data at offset %lld", startOffset);
             NSLog(@"data request requested offset %lld, requested length %lld, current offset %lld", loadingRequest.dataRequest.requestedOffset, loadingRequest.dataRequest.requestedLength, loadingRequest.dataRequest.currentOffset);
             NSLog(@"fetched data length %lld", requestedData.length);
