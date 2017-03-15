@@ -53,7 +53,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     [self.playerItem removeObserver:self forKeyPath:@"status"];
     [self.playerItem removeObserver:self forKeyPath:@"playbackBufferEmpty"];
     [self.playerItem removeObserver:self forKeyPath:@"playbackLikelyToKeepUp"];
-    [self.playerItem removeObserver:self forKeyPath:@"timebase"];
+    
 }
 
 - (id)initWithInfo:(id<CDVideoInfoProvider>)infoProvider {
@@ -74,7 +74,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     [self.playerItem removeObserver:self forKeyPath:@"status"];
     [self.playerItem removeObserver:self forKeyPath:@"playbackBufferEmpty"];
     [self.playerItem removeObserver:self forKeyPath:@"playbackLikelyToKeepUp"];
-    [self.playerItem removeObserver:self forKeyPath:@"timebase"];
+    [self.asset.resourceLoader setDelegate:nil queue:dispatch_get_main_queue()];
     
     
     [self setupWithInfoProvider:infoProvider];
@@ -88,7 +88,8 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         self.asset = [AVURLAsset assetWithURL:[NSURL fileURLWithPath:localURLPath]];
         self.fromLocalFile = YES;
     } else {
-        self.requests = [NSMutableArray array];
+        
+//        [self.requests addObserver:self forKeyPath:@"count" options:NSKeyValueObservingOptionNew context:nil];
         
         self.task = [[CDPlayer dispatcher] makeTaskWithInfo:infoProvider];
         [self.task pushOffset:0]; // 有些任务可能是下载到一半的，这里重置下载位置，确保开始的播放
@@ -105,15 +106,19 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         
         self.fromLocalFile = NO;
     }
-    
+
+    NSLog(@"ggg");
     if (self.playerItem) {
         [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
+        NSLog(@"aaa");
         AVPlayerItem *playerItem = [AVPlayerItem playerItemWithAsset:self.asset];
+        NSLog(@"bbb");
         [self.player replaceCurrentItemWithPlayerItem:playerItem];
+        NSLog(@"cccc");
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:playerItem];
         self.playerItem = playerItem;
         
-        
+        NSLog(@"ddddd");
     } else {
         self.playerItem = [AVPlayerItem playerItemWithAsset:self.asset];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
@@ -126,6 +131,9 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         
     }
     
+    self.requests = [NSMutableArray array];
+    
+    NSLog(@"kkkk");
     
     self.playOnWhileKeepUp = YES;
     
@@ -134,7 +142,6 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     [self.playerItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:nil];
     [self.playerItem addObserver:self forKeyPath:@"playbackBufferEmpty" options:NSKeyValueObservingOptionNew context:nil];
     [self.playerItem addObserver:self forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:nil];
-    [self.playerItem addObserver:self forKeyPath:@"timebase" options:NSKeyValueObservingOptionNew context:nil];
     
     
 }
@@ -516,6 +523,8 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     
     return found;
 }
+
+
 
 #pragma load
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
