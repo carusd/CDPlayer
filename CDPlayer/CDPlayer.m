@@ -88,6 +88,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         self.asset = [AVURLAsset assetWithURL:[NSURL fileURLWithPath:localURLPath]];
         self.fromLocalFile = YES;
     } else {
+        self.requests = [NSMutableArray array];
         
         self.task = [[CDPlayer dispatcher] makeTaskWithInfo:infoProvider];
         [self.task pushOffset:0]; // 有些任务可能是下载到一半的，这里重置下载位置，确保开始的播放
@@ -128,7 +129,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     
     self.playOnWhileKeepUp = YES;
     
-    self.requests = [NSMutableArray array];
+    
     
     [self.playerItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:nil];
     [self.playerItem addObserver:self forKeyPath:@"playbackBufferEmpty" options:NSKeyValueObservingOptionNew context:nil];
@@ -519,6 +520,11 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 #pragma load
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
     NSLog(@"sissssssssss  %@", loadingRequest.dataRequest);
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"hhhh" message:@"你有新的消息，请注意查询" delegate:nil
+                                          cancelButtonTitle:@"" otherButtonTitles:nil];
+    [alert show];
+    
     BOOL fed = [self tryToFeedRequest:loadingRequest];
     
     if (!fed) {
