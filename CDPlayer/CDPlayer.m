@@ -520,10 +520,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 #pragma load
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
     NSLog(@"sissssssssss  %@", loadingRequest.dataRequest);
-    
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"hhhh" message:@"你有新的消息，请注意查询" delegate:nil
-                                          cancelButtonTitle:@"" otherButtonTitles:nil];
-    [alert show];
+
     
     BOOL fed = [self tryToFeedRequest:loadingRequest];
     
