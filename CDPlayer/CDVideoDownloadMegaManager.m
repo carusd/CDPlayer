@@ -21,6 +21,8 @@ NSString * const CDVideoDownloadDirURLDidChanged = @"CDVideoDownloadDirURLDidCha
 
 @implementation CDVideoDownloadMegaManager
 
+
+
 + (instancetype)sharedInstance {
     static CDVideoDownloadMegaManager *manager = nil;
     static dispatch_once_t onceToken;
@@ -80,6 +82,8 @@ NSString * const CDVideoDownloadDirURLDidChanged = @"CDVideoDownloadDirURLDidCha
     [[NSNotificationCenter defaultCenter] postNotificationName:CDVideoDownloadDirURLDidChanged object:nil];
 }
 
+
+
 - (void)addTask:(CDVideoDownloadTask *)task {
     if (![self.allTasks containsObject:task]) {
         [self.allTasks addObject:task];
@@ -105,7 +109,10 @@ NSString * const CDVideoDownloadDirURLDidChanged = @"CDVideoDownloadDirURLDidCha
         for (NSString *contentPath in contents) {
             NSString *path = [NSString stringWithFormat:@"%@/%@", tasksDirPath, contentPath];
             CDVideoDownloadTask *task = [NSKeyedUnarchiver unarchiveObjectWithFile:path];
-            [_allTasks addObject:task];
+            if (task) {
+                [_allTasks addObject:task];
+            }
+            
         }
     }
     

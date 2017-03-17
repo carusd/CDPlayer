@@ -14,8 +14,12 @@
 
 extern NSString * const CDVideoDownloadStateDidChangedNotif;
 extern NSString * const CDVideoDownloadTaskDidHasNewBlockNotif;
+extern NSString * const CDVideoDownloadTaskInconsistenceNotif;
 
 extern NSString * const CDVideoDownloadTaskNotifTaskKey;
+extern NSString * const CDVideoDownloadTaskNotifRequestRangeKey;
+extern NSString * const CDVideoDownloadTaskNotifResponseRangeKey;
+
 
 extern NSString * const CDVideoDownloadBackgroundSessionIdentifier;
 

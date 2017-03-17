@@ -100,11 +100,11 @@
         return;
     }
     if (self.loadingTasks.count < self.maxConcurrentNum) {
-        NSLog(@"load ba");
+        NSLog(@"load ba %@", task.videoURLPath);
         [task load];
         
     } else if (CDVideoDownloadTaskPriorityImmediate == task.priority){
-        NSLog(@"any way load ba");
+        NSLog(@"any way load ba %@", task.videoURLPath);
         NSArray *loadingTasks = [self loadingTasks];
         for (CDVideoDownloadTask *loadingTask in loadingTasks) {
             if (CDVideoDownloadTaskPriorityImmediate == loadingTask.priority) {
@@ -116,7 +116,7 @@
         
         [task load];
     } else {
-        NSLog(@"no...wait ba");
+        NSLog(@"no...wait ba %@", task.videoURLPath);
         [task yield];
     }
 }
@@ -182,6 +182,12 @@
     
     NSString *taskURLPath = [NSString stringWithFormat:@"%@/%@", [self.persistenceManager cacheDirURLPath], filename];
     
+    NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
+    NSString *taskDirCompletedURLPath = [NSString stringWithFormat:@"%@/%@", prefix, [self.persistenceManager cacheDirURLPath]];
+    BOOL *isDir;
+    if (![[NSFileManager defaultManager] fileExistsAtPath:taskDirCompletedURLPath isDirectory:&isDir]) {
+        [[NSFileManager defaultManager] createDirectoryAtPath:taskDirCompletedURLPath withIntermediateDirectories:YES attributes:nil error:nil];
+    }
     
     task = [[CDVideoDownloadTask alloc] initWithVideoInfoProvider:provider taskURLPath:taskURLPath];
     task.label = [provider title];

@@ -14,8 +14,11 @@
 
 NSString * const CDVideoDownloadStateDidChangedNotif = @"CDVideoDownloadStateDidChangedNotif";
 NSString * const CDVideoDownloadTaskDidHasNewBlockNotif = @"CDVideoDownloadTaskDidHasNewBlockNotif";
+NSString * const CDVideoDownloadTaskInconsistenceNotif = @"CDVideoDownloadTaskInconsistenceNotif";
 
 NSString * const CDVideoDownloadTaskNotifTaskKey = @"CDVideoDownloadTaskNotifTaskKey";
+NSString * const CDVideoDownloadTaskNotifRequestRangeKey = @"CDVideoDownloadTaskNotifRequestRangeKey";
+NSString * const CDVideoDownloadTaskNotifResponseRangeKey = @"CDVideoDownloadTaskNotifResponseRangeKey";
 
 NSString * const CDVideoDownloadBackgroundSessionIdentifier = @"CDVideoDownloadBackgroundSessionIdentifier";
 
@@ -128,6 +131,10 @@ static NSString * _CacheDirectoryName;
         NSURL *writingURL = [NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.localURLPath]];
         NSError *e = nil;
         self.fileHandle = [NSFileHandle fileHandleForWritingToURL:writingURL error:&e];
+        if (!self.fileHandle) {
+            NSLog(@"creating file handle error %@", e);
+        }
+        
     }
     
     return self;
@@ -290,7 +297,8 @@ static NSString * _CacheDirectoryName;
             }
         }
         
-        if (CDVideoDownloadStateLoading == self.state) {
+        if (CDVideoDownloadStateLoading == self.state && -1 == self.nextOffset) {
+//            NSLog(@"loaded");
             self.state = CDVideoDownloadStateLoaded;
             [self notifyStateChanged];
             [self save];
@@ -447,7 +455,8 @@ static NSString * _CacheDirectoryName;
 //        range = [NSString stringWithFormat:@"bytes=%lld-%lld", self.offset, self.offset + _VideoBlockSize];
 //    }
     range = [NSString stringWithFormat:@"bytes=%lld-%lld", self.offset, self.offset + _VideoBlockSize];
-    
+    long long requestStart = self.offset;
+    long long requestEnd = self.offset + _VideoBlockSize;
     
     [requestSerializer setValue:range forHTTPHeaderField:@"Range"];
     
@@ -457,7 +466,7 @@ static NSString * _CacheDirectoryName;
     
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
-    NSLog(@"%@ requesting %@, with range %@, with total %lld", self, self.videoURLPath, range, self.totalBytes);
+//    NSLog(@"%@ requesting %@, with range %@, with total %lld", self, self.videoURLPath, range, self.totalBytes);
 
     [self.httpManager GET:self.videoURLPath parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
         
@@ -470,12 +479,36 @@ static NSString * _CacheDirectoryName;
 //            NSLog(@"file offset %lld", wself.fileHandle.offsetInFile);
 
         [wself.fileHandle writeData:videoBlock];
+        [wself.fileHandle synchronizeFile];
         wself.offset += task.countOfBytesReceived;
         NSHTTPURLResponse *response = (NSHTTPURLResponse *)task.response;
         NSString *contentRange = response.allHeaderFields[@"Content-Range"];
         NSArray *values = [contentRange componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@" /"]];
+        
         NSString *totalBytesNum = values.lastObject;
         wself.totalBytes = totalBytesNum.longLongValue;
+        
+        if (values.count > 1) { // for safety
+            NSString *realRangeStr = values[1];
+            NSArray *realRangeArr = [realRangeStr componentsSeparatedByString:@"-"];
+            long long responseStart = [realRangeArr.firstObject longLongValue];
+            long long responseEnd = [realRangeArr.lastObject longLongValue];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (responseEnd != wself.totalBytes && responseEnd != wself.totalBytes - 1) {
+                    if (requestStart != responseStart || requestEnd != responseEnd) {
+                        [[NSNotificationCenter defaultCenter] postNotificationName:CDVideoDownloadTaskInconsistenceNotif object:self userInfo:@{CDVideoDownloadTaskNotifTaskKey: self, CDVideoDownloadTaskNotifRequestRangeKey: range, CDVideoDownloadTaskNotifResponseRangeKey: contentRange}];
+                    }
+                } else {
+                    if (requestStart != responseStart) {
+                        [[NSNotificationCenter defaultCenter] postNotificationName:CDVideoDownloadTaskInconsistenceNotif object:self userInfo:@{CDVideoDownloadTaskNotifTaskKey: self, CDVideoDownloadTaskNotifRequestRangeKey: range, CDVideoDownloadTaskNotifResponseRangeKey: contentRange}];
+                    }
+                }
+            });
+        }
+        
+        
+        
 //        NSLog(@"%@ response with range %@", self, contentRange);
         
         [wself save];
@@ -483,7 +516,7 @@ static NSString * _CacheDirectoryName;
         
         dispatch_semaphore_signal(semaphore);
     } failure:^(NSURLSessionDataTask *task, NSError *e) {
-        NSLog(@"%@ response with error  %@", self, e);
+//        NSLog(@"%@ response with error  %@", self, e);
         wself.error = e;
         [wself loadError];
         
