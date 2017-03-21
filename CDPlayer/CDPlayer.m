@@ -42,6 +42,15 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 
 @implementation CDPlayer
 
++ (NSString *)dispatcherTag {
+    return @"player";
+}
+
++ (id<CDVideoDownloadTaskDispatcher>)dispatcher {
+    return [[CDVideoDownloadMegaManager sharedInstance] dispatcherWithTag:[CDPlayer dispatcherTag] class:nil];
+}
+
+
 - (void)dealloc {
     [self.task pause];
     
@@ -54,6 +63,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     [self.playerItem removeObserver:self forKeyPath:@"playbackBufferEmpty"];
     [self.playerItem removeObserver:self forKeyPath:@"playbackLikelyToKeepUp"];
     
+    [self.player removeObserver:self forKeyPath:@"rate"];
 }
 
 - (id)initWithInfo:(id<CDVideoInfoProvider>)infoProvider {
@@ -155,21 +165,18 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     [self.playerItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:nil];
     [self.playerItem addObserver:self forKeyPath:@"playbackBufferEmpty" options:NSKeyValueObservingOptionNew context:nil];
     [self.playerItem addObserver:self forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:nil];
-    
+    [self.player addObserver:self forKeyPath:@"rate" options:NSKeyValueObservingOptionNew context:nil];
     
 }
 
-+ (NSString *)dispatcherTag {
-    return @"player";
-}
-
-+ (id<CDVideoDownloadTaskDispatcher>)dispatcher {
-    return [[CDVideoDownloadMegaManager sharedInstance] dispatcherWithTag:[CDPlayer dispatcherTag] class:nil];
-}
 
 
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+    
+    if ([keyPath isEqualToString:@"rate"]) {
+        NSLog(@"player rate %f", self.player.rate);
+    }
     
     if ([keyPath isEqualToString:@"status"]) {
         switch (self.playerItem.status) {
@@ -182,7 +189,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 
                 break;
             case AVPlayerItemStatusFailed:
-//                NSLog(@"lllllllllllll  %@", self.playerItem.error);
+                NSLog(@"lllllllllllll  %@", self.playerItem.error);
                 self.error = self.playerItem.error;
                 self.state = CDPlayerStateError;
                 
@@ -426,10 +433,10 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         if (0 != self.shouldSeekToPosition) {
             [self _seek];
         } else {
-//            NSLog(@"try to play %@", self.task.videoURLPath);
-//            NSLog(@"curre state %d", self.state);
-//            NSLog(@"playitem status %d", self.playerItem.status);
-//            NSLog(@"requests %@", self.requests);
+            NSLog(@"try to play %@", self.task.videoURLPath);
+            NSLog(@"curre state %d", self.state);
+            NSLog(@"playitem status %d", self.playerItem.status);
+            NSLog(@"requests %@", self.requests);
             if (CDPlayerStateBuffering == self.state) {
                 [self.player play];
                 if (AVPlayerItemStatusReadyToPlay == self.playerItem.status) {
@@ -493,12 +500,18 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         startOffset = loadingRequest.dataRequest.currentOffset;
     }
     
+    
 //    NSLog(@"hhhhhhhhhh  %@", loadingRequest.dataRequest);
     
     __weak CDPlayer *wself = self;
     [self.task.loadedVideoBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *videoBlock, NSUInteger idx, BOOL *stop) {
+        long long readingDataLength;
+        if ([UIDevice currentDevice].systemVersion.floatValue >= 9 && loadingRequest.dataRequest.requestsAllDataToEndOfResource) {
+            readingDataLength = MIN(loadingRequest.dataRequest.requestedLength, [CDVideoDownloadTask VideoBlockSize]);
+        } else {
+            readingDataLength = loadingRequest.dataRequest.requestedLength;
+        }
         
-        long long readingDataLength = MIN(loadingRequest.dataRequest.requestedLength, [CDVideoDownloadTask VideoBlockSize]);
         
         CDVideoBlock *requestedBlock = [[CDVideoBlock alloc] initWithOffset:startOffset length:readingDataLength];
         if ([videoBlock containsBlock:requestedBlock]) {
@@ -508,12 +521,12 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
             
             long long currentOffset = loadingRequest.dataRequest.currentOffset;
             
-//            NSLog(@"fetch data at offset %lld", startOffset);
-//            NSLog(@"data request requested offset %lld, requested length %lld, current offset %lld", loadingRequest.dataRequest.requestedOffset, loadingRequest.dataRequest.requestedLength, loadingRequest.dataRequest.currentOffset);
-//            NSLog(@"fetched data length %lld", requestedData.length);
+            NSLog(@"fetch data at offset %lld", startOffset);
+            NSLog(@"data request requested offset %lld, requested length %lld, current offset %lld", loadingRequest.dataRequest.requestedOffset, loadingRequest.dataRequest.requestedLength, loadingRequest.dataRequest.currentOffset);
+            NSLog(@"fetched data length %lld", requestedData.length);
             [loadingRequest.dataRequest respondWithData:requestedData];
             
-//            NSLog(@"??????????? requested offset %lld, requested length %lld, current offset %lld\n", loadingRequest.dataRequest.requestedOffset, loadingRequest.dataRequest.requestedLength, loadingRequest.dataRequest.currentOffset);
+            NSLog(@"??????????? requested offset %lld, requested length %lld, current offset %lld\n", loadingRequest.dataRequest.requestedOffset, loadingRequest.dataRequest.requestedLength, loadingRequest.dataRequest.currentOffset);
             
             [loadingRequest finishLoading];
             found = YES;
@@ -528,7 +541,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 //                found = NO;
 //            }
             
-//            NSLog(@"finished");
+            NSLog(@"finished");
             
             
             
@@ -546,7 +559,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 
 #pragma load
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
-//    NSLog(@"sissssssssss  %@", loadingRequest.dataRequest);
+    NSLog(@"sissssssssss  %@", loadingRequest.dataRequest);
 
     
     BOOL fed = [self tryToFeedRequest:loadingRequest];
