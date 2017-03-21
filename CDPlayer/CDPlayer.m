@@ -94,10 +94,10 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
     NSString *localURLPath = [NSString stringWithFormat:@"%@/%@", prefix, infoProvider.localURLPath];
     
-    BOOL *isDir;
-    if (![[NSFileManager defaultManager] fileExistsAtPath:localURLPath isDirectory:&isDir]) {
-        [[NSFileManager defaultManager] createDirectoryAtPath:localURLPath withIntermediateDirectories:YES attributes:nil error:nil];
-    }
+//    BOOL *isDir;
+//    if (![[NSFileManager defaultManager] fileExistsAtPath:localURLPath isDirectory:&isDir]) {
+//        [[NSFileManager defaultManager] createDirectoryAtPath:localURLPath withIntermediateDirectories:YES attributes:nil error:nil];
+//    }
     
     if (infoProvider.completelyLoaded) {
         self.asset = [AVURLAsset assetWithURL:[NSURL fileURLWithPath:localURLPath]];
