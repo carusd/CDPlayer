@@ -184,7 +184,10 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
                 
                 if (CDPlayerStateBuffering == self.state) {
                     [self.player play];
-                    self.state = CDPlayerStatePlaying;
+                    if ([self couldPlay]) {
+                        self.state = CDPlayerStatePlaying;
+                    }
+                    
                 }
 
                 break;
@@ -238,7 +241,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     
     [self.player play];
     
-    if (AVPlayerItemStatusReadyToPlay == self.playerItem.status) {
+    if ([self couldPlay]) {
         self.state = CDPlayerStatePlaying;
     } else {
         self.state = CDPlayerStateBuffering;
@@ -257,13 +260,18 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     
 }
 
+- (BOOL)couldPlay {
+//    return AVPlayerItemStatusReadyToPlay == self.playerItem.status;
+    return self.playerItem.isPlaybackLikelyToKeepUp;
+}
+
 - (void)continueToBuffer {
     
     self.task.priority = CDVideoDownloadTaskPriorityImmediate;
     [[CDPlayer dispatcher] tryToStartTask:self.task];
     
     [self.player play];
-    if (AVPlayerItemStatusReadyToPlay == self.playerItem.status) {
+    if ([self couldPlay]) {
         self.state = CDPlayerStatePlaying;
     } else {
         self.state = CDPlayerStateBuffering;
@@ -437,9 +445,10 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
             NSLog(@"curre state %d", self.state);
             NSLog(@"playitem status %d", self.playerItem.status);
             NSLog(@"requests %@", self.requests);
+            NSLog(@"is likely to keep up %d", self.playerItem.isPlaybackLikelyToKeepUp);
             if (CDPlayerStateBuffering == self.state) {
                 [self.player play];
-                if (AVPlayerItemStatusReadyToPlay == self.playerItem.status) {
+                if ([self couldPlay]) {
                     self.state = CDPlayerStatePlaying;
                 } else {
                     self.state = CDPlayerStateBuffering;
