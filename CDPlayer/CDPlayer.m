@@ -479,7 +479,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 //        NSLog(@"push offset %lld", smallestOffset);
 //        NSLog(@"uuuuuuuuuuuuu  %d", self.task.state);
         
-        if (CDVideoDownloadStateLoaded == self.task.state || CDVideoDownloadStateLoadError == self.task.state) {
+        if (CDVideoDownloadStateLoaded == self.task.state) {
             self.task.priority = CDVideoDownloadTaskPriorityImmediate;
             [[CDPlayer dispatcher] tryToStartTask:self.task];
         }
