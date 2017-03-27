@@ -69,6 +69,9 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 - (id)initWithInfo:(id<CDVideoInfoProvider>)infoProvider {
     self = [super init];
     if (self) {
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"testing" message:@"testing" preferredStyle:UIAlertControllerStyleAlert];
+        [[[[UIApplication sharedApplication] keyWindow] rootViewController] presentViewController:alert animated:YES completion:nil];
+        
         [self setupWithInfoProvider:infoProvider];
         
         self.state = CDPlayerStateStop;
