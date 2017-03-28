@@ -121,7 +121,7 @@ static NSString * _CacheDirectoryName;
 //        self.httpManager = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:@"com.carusd.backgroundsession"]];
         self.httpManager = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
         self.httpManager.responseSerializer = [AFHTTPResponseSerializer serializer];
-        self.httpManager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"video/mp4", @"text/html", nil];
+        self.httpManager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"video/mp4", @"text/html", @"application/octet-stream", nil];
         self.httpManager.completionQueue = self.cache_queue;
         
         self.createTime = [[NSDate date] timeIntervalSince1970];
@@ -169,7 +169,7 @@ static NSString * _CacheDirectoryName;
         
         self.httpManager = [[AFHTTPSessionManager alloc] initWithSessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]];
         self.httpManager.responseSerializer = [AFHTTPResponseSerializer serializer];
-        self.httpManager.responseSerializer.acceptableContentTypes = [NSSet setWithObject:@"video/mp4"];
+        self.httpManager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"video/mp4", @"text/html", @"application/octet-stream", nil];
         self.httpManager.completionQueue = self.cache_queue;
         
         NSURL *writingURL = [NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.localURLPath]];
