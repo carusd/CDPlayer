@@ -31,7 +31,7 @@
 - (NSMutableArray<CDVideoDownloadTask *> *)tasksWithTag:(NSString *)tag;
 - (void)addTask:(CDVideoDownloadTask *)task;
 - (void)removeTask:(CDVideoDownloadTask *)task;
-
+- (void)removeTasksInArray:(NSArray *)tasks;
 
 @end
 

@@ -152,6 +152,8 @@
     }
 }
 
+
+
 - (void)removeTaskWithInfoProvider:(id<CDVideoInfoProvider>)provider {
     CDVideoDownloadTask *task = [self taskWithInfo:provider];
     if (task) {
@@ -236,14 +238,17 @@
     dispatch_queue_t clearTasksQueue = dispatch_queue_create("com.caursd.CDPlayer.clearTasks", DISPATCH_QUEUE_SERIAL);
     
     void(^clear)(void) = ^{
+        NSMutableArray *tmp = [NSMutableArray array];
         for (CDVideoDownloadTask *task in self.tasks) {
             [task removeTag:self.tag];
             
             if (task.tags.count <= 0) {
                 [task destroy];
-                [self.persistenceManager removeTask:task];
+                [tmp addObject:task];
+                
             }
         }
+        [self.persistenceManager removeTasksInArray:tmp];
         
         self.tasks = [NSMutableArray array];
         

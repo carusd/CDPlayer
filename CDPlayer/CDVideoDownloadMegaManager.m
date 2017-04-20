@@ -97,6 +97,10 @@ NSString * const CDVideoDownloadDirURLDidChanged = @"CDVideoDownloadDirURLDidCha
     }
 }
 
+- (void)removeTasksInArray:(NSArray *)tasks {
+    [self.allTasks removeObjectsInArray:tasks];
+}
+
 - (NSMutableArray *)allTasks {
     if (!_allTasks) {
         _allTasks = [NSMutableArray array];

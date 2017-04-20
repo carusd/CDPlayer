@@ -264,8 +264,8 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 }
 
 - (BOOL)couldPlay {
-//    return AVPlayerItemStatusReadyToPlay == self.playerItem.status;
-    return self.playerItem.isPlaybackLikelyToKeepUp;
+    return AVPlayerItemStatusReadyToPlay == self.playerItem.status;
+//    return self.playerItem.isPlaybackLikelyToKeepUp;
 }
 
 - (void)continueToBuffer {
@@ -486,8 +486,6 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
             self.task.priority = CDVideoDownloadTaskPriorityImmediate;
             [[CDPlayer dispatcher] tryToStartTask:self.task];
         }
-        
-        
     }
     
     [self.requests removeObjectsInArray:completedRequests];
