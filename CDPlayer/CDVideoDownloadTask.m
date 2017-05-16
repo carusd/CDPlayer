@@ -133,6 +133,8 @@ static NSString * _CacheDirectoryName;
         self.fileHandle = [NSFileHandle fileHandleForWritingToURL:writingURL error:&e];
         if (!self.fileHandle) {
             NSLog(@"creating file handle error %@", e);
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"attension!" message:e.localizedFailureReason delegate:nil cancelButtonTitle:@"取消" otherButtonTitles:@"o", nil];
+            [alert show];
         }
         
     }

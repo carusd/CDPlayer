@@ -63,14 +63,11 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     [self.playerItem removeObserver:self forKeyPath:@"playbackBufferEmpty"];
     [self.playerItem removeObserver:self forKeyPath:@"playbackLikelyToKeepUp"];
     
-    [self.player removeObserver:self forKeyPath:@"rate"];
 }
 
 - (id)initWithInfo:(id<CDVideoInfoProvider>)infoProvider {
     self = [super init];
     if (self) {
-//        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"testing" message:@"testing" preferredStyle:UIAlertControllerStyleAlert];
-//        [[[[UIApplication sharedApplication] keyWindow] rootViewController] presentViewController:alert animated:YES completion:nil];
         
         [self setupWithInfoProvider:infoProvider];
         
@@ -116,6 +113,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         NSURLComponents *videoURLComponents = [[NSURLComponents alloc] initWithURL:[NSURL URLWithString:self.task.videoURLPath] resolvingAgainstBaseURL:NO];
         videoURLComponents.scheme = @"streaming";
         self.asset = [AVURLAsset assetWithURL:videoURLComponents.URL];
+//        [self.asset.resourceLoader setDelegate:self queue:dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0)];
         [self.asset.resourceLoader setDelegate:self queue:dispatch_get_main_queue()];
         
         NSError *e = nil;
@@ -136,26 +134,29 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     
     if (self.playerItem) {
         [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemPlaybackStalledNotification object:self.playerItem];
         
         AVPlayerItem *playerItem = [AVPlayerItem playerItemWithAsset:self.asset];
         
         [self.player replaceCurrentItemWithPlayerItem:playerItem];
         
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:playerItem];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidStalled:) name:AVPlayerItemPlaybackStalledNotification object:playerItem];
         self.playerItem = playerItem;
         
         
     } else {
         self.playerItem = [AVPlayerItem playerItemWithAsset:self.asset];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidStalled:) name:AVPlayerItemPlaybackStalledNotification object:self.playerItem];
         
         self.player = [AVPlayer playerWithPlayerItem:self.playerItem];
         if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 10) {
             self.player.automaticallyWaitsToMinimizeStalling = NO;
         }
-        
-        
     }
+    
+    
     
     self.requests = [NSMutableArray array];
     
@@ -168,7 +169,6 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     [self.playerItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:nil];
     [self.playerItem addObserver:self forKeyPath:@"playbackBufferEmpty" options:NSKeyValueObservingOptionNew context:nil];
     [self.playerItem addObserver:self forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:nil];
-    [self.player addObserver:self forKeyPath:@"rate" options:NSKeyValueObservingOptionNew context:nil];
     
 }
 
@@ -177,20 +177,16 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
     
-    if ([keyPath isEqualToString:@"rate"]) {
-        NSLog(@"player rate %f", self.player.rate);
-    }
-    
     if ([keyPath isEqualToString:@"status"]) {
         switch (self.playerItem.status) {
             case AVPlayerItemStatusReadyToPlay:
                 
                 if (CDPlayerStateBuffering == self.state) {
+                    
                     [self.player play];
-                    if ([self couldPlay]) {
+                    if (self.playerItem.playbackLikelyToKeepUp) {
                         self.state = CDPlayerStatePlaying;
                     }
-                    
                 }
 
                 break;
@@ -198,14 +194,17 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
                 NSLog(@"lllllllllllll  %@", self.playerItem.error);
                 self.error = self.playerItem.error;
                 self.state = CDPlayerStateError;
-                
                 break;
+            default:
+                break;
+                
             
         }
     } else if ([keyPath isEqualToString:@"playbackLikelyToKeepUp"]) {
         if (!self.playerItem.playbackLikelyToKeepUp) {
             if (CDPlayerStatePlaying == self.state && CDVideoDownloadStateLoading == self.task.state) {
                 self.state = CDPlayerStateBuffering;
+                NSLog(@"ppppppppppp");
             }
         } else {
             if (CDPlayerStateBuffering == self.state) {
@@ -225,6 +224,12 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 //            // 中处理
 //            [self.task load];
 //            self.state = CDPlayerStateBuffering;
+        } else if (self.task.state == CDVideoDownloadStateLoading) {
+            if (self.state == CDPlayerStatePlaying) {
+                self.state = CDPlayerStateBuffering;
+                NSLog(@"eeeeeeeeee");
+            }
+            
         }
         
     }
@@ -395,6 +400,13 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     
 }
 
+- (void)moviePlayDidStalled:(NSNotification *)notif {
+    if (notif.object == self.playerItem) {
+        if (CDPlayerStatePlaying == self.state) {
+            self.state = CDPlayerStateBuffering;
+        }
+    }
+}
 
 - (void)moviePlayDidEnd:(NSNotification *)notif {
     if (self.loop) {
@@ -444,17 +456,10 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         if (0 != self.shouldSeekToPosition) {
             [self _seek];
         } else {
-            NSLog(@"try to play %@", self.task.videoURLPath);
-            NSLog(@"curre state %d", self.state);
-            NSLog(@"playitem status %d", self.playerItem.status);
-            NSLog(@"requests %@", self.requests);
-            NSLog(@"is likely to keep up %d", self.playerItem.isPlaybackLikelyToKeepUp);
             if (CDPlayerStateBuffering == self.state) {
                 [self.player play];
-                if ([self couldPlay]) {
+                if (self.playerItem.isPlaybackLikelyToKeepUp) {
                     self.state = CDPlayerStatePlaying;
-                } else {
-                    self.state = CDPlayerStateBuffering;
                 }
                 
             }
@@ -529,31 +534,11 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
             [wself.fileHandle seekToFileOffset:startOffset];
             NSData *requestedData = [wself.fileHandle readDataOfLength:readingDataLength];
             
-            long long currentOffset = loadingRequest.dataRequest.currentOffset;
-            
-            NSLog(@"fetch data at offset %lld", startOffset);
-            NSLog(@"data request requested offset %lld, requested length %lld, current offset %lld", loadingRequest.dataRequest.requestedOffset, loadingRequest.dataRequest.requestedLength, loadingRequest.dataRequest.currentOffset);
-            NSLog(@"fetched data length %lld", requestedData.length);
             [loadingRequest.dataRequest respondWithData:requestedData];
             
-            NSLog(@"??????????? requested offset %lld, requested length %lld, current offset %lld\n", loadingRequest.dataRequest.requestedOffset, loadingRequest.dataRequest.requestedLength, loadingRequest.dataRequest.currentOffset);
             
             [loadingRequest finishLoading];
             found = YES;
-            
-//            if (!loadingRequest.dataRequest.requestsAllDataToEndOfResource) {
-//                [loadingRequest finishLoading];
-//                found = YES;
-//            } else if (requestedData.length >= loadingRequest.dataRequest.requestedLength) {
-//                [loadingRequest finishLoading];
-//                found = YES;
-//            } else {
-//                found = NO;
-//            }
-            
-            NSLog(@"finished");
-            
-            
             
             *stop = YES;
         }
@@ -569,8 +554,6 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 
 #pragma load
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
-    NSLog(@"sissssssssss  %@", loadingRequest.dataRequest);
-
     
     BOOL fed = [self tryToFeedRequest:loadingRequest];
     
@@ -582,16 +565,12 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         }
     }
     
-    
-    
     return YES;
 }
 
 - (void)resourceLoader:(AVAssetResourceLoader *)resourceLoader didCancelLoadingRequest:(AVAssetResourceLoadingRequest *)loadingRequest
 {
-    
     [self.requests removeObject:loadingRequest];
-    
     
 }
 
