@@ -38,6 +38,7 @@ extern NSString * const CDPlayerDidSeekToPositionNotif;
 
 - (void)play;
 - (void)pause;
+- (void)stop;
 
 - (void)continueToBuffer; // 因为错误被迫停止，需要重新开始加载的时候，调用这个方法
 

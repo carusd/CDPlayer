@@ -240,25 +240,27 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 #pragma control
 - (void)play {
     
+    if (CDPlayerStatePlaying == self.state || CDPlayerStateBuffering == self.state) {
+        return;
+    }
+    
     if (!self.fromLocalFile) {
         self.task.priority = CDVideoDownloadTaskPriorityImmediate;
         
         [[CDPlayer dispatcher] tryToStartTask:self.task];
     }
     
-    
     [self.player play];
     
-    if ([self couldPlay]) {
+    if (CDVideoDownloadStateLoadError == self.task.state) {
+        self.error = self.task.error;
+        self.state = CDPlayerStateError;
+    } else if ([self couldPlay]) {
         self.state = CDPlayerStatePlaying;
     } else {
         self.state = CDPlayerStateBuffering;
     }
     
-    if (CDVideoDownloadStateLoadError == self.task.state) {
-        self.error = self.task.error;
-        self.state = CDPlayerStateError;
-    }
 
 }
 
@@ -268,9 +270,15 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     
 }
 
+- (void)stop {
+    [self.player pause];
+    [self.player seekToTime:kCMTimeZero];
+    self.state = CDPlayerStateStop;
+}
+
 - (BOOL)couldPlay {
-    return AVPlayerItemStatusReadyToPlay == self.playerItem.status;
-//    return self.playerItem.isPlaybackLikelyToKeepUp;
+//    return AVPlayerItemStatusReadyToPlay == self.playerItem.status;
+    return self.playerItem.isPlaybackLikelyToKeepUp;
 }
 
 - (void)continueToBuffer {
@@ -279,16 +287,16 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     [[CDPlayer dispatcher] tryToStartTask:self.task];
     
     [self.player play];
-    if ([self couldPlay]) {
+    
+    if (CDVideoDownloadStateLoadError == self.task.state) {
+        self.error = self.task.error;
+        self.state = CDPlayerStateError;
+    } else if ([self couldPlay]) {
         self.state = CDPlayerStatePlaying;
     } else {
         self.state = CDPlayerStateBuffering;
     }
     
-    if (CDVideoDownloadStateLoadError == self.task.state) {
-        self.error = self.task.error;
-        self.state = CDPlayerStateError;
-    }
 }
 
 - (void)_seek {
