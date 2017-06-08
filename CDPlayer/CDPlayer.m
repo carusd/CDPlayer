@@ -16,6 +16,24 @@
 
 NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNotif";
 
+@interface CDPlayerInternal : AVPlayer
+
+@end
+
+@implementation CDPlayerInternal
+
+- (void)play {
+    [super play];
+    NSLog(@"hm??????????");
+}
+
+- (void)setRate:(float)rate {
+    [super setRate:rate];
+    NSLog(@"huh???????????");
+}
+
+@end
+
 @interface CDPlayer()<AVAssetResourceLoaderDelegate>
 
 @property (nonatomic, strong) AVPlayer *player;
@@ -150,13 +168,11 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidStalled:) name:AVPlayerItemPlaybackStalledNotification object:self.playerItem];
         
-        self.player = [AVPlayer playerWithPlayerItem:self.playerItem];
+        self.player = [CDPlayerInternal playerWithPlayerItem:self.playerItem];
         if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 10) {
             self.player.automaticallyWaitsToMinimizeStalling = NO;
         }
     }
-    
-    
     
     self.requests = [NSMutableArray array];
     
@@ -180,6 +196,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     if ([keyPath isEqualToString:@"status"]) {
         switch (self.playerItem.status) {
             case AVPlayerItemStatusReadyToPlay:
+                NSLog(@"ccccccccccccccc  %d, jjjjjjj  %@", self.state, self.task.videoURLPath);
                 
                 if (CDPlayerStateBuffering == self.state) {
                     
@@ -187,8 +204,9 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
                     if (self.playerItem.playbackLikelyToKeepUp) {
                         self.state = CDPlayerStatePlaying;
                     }
+                } else if (CDPlayerStatePause == self.state || CDPlayerStateStop == self.state) {
+                    [self.player pause];
                 }
-
                 break;
             case AVPlayerItemStatusFailed:
                 NSLog(@"lllllllllllll  %@", self.playerItem.error);
@@ -562,6 +580,8 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 
 #pragma load
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
+    
+    NSLog(@"loading request %@", loadingRequest);
     
     BOOL fed = [self tryToFeedRequest:loadingRequest];
     

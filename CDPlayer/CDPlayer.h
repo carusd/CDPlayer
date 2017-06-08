@@ -12,6 +12,9 @@
 
 extern NSString * const CDPlayerDidSeekToPositionNotif;
 
+
+
+
 @interface CDPlayer : NSObject
 
 - (id)initWithInfo:(id<CDVideoInfoProvider>)infoProvider;
