@@ -142,12 +142,12 @@
         [task removeTag:self.tag];
         [self.tasks removeObject:task];
         
-        NSLog(@"remove %@ from tag %@", task, self.tag);
+//        NSLog(@"remove %@ from tag %@", task, self.tag);
         
         if (task.tags.count <= 0) {
             [task destroy];
             [self.persistenceManager removeTask:task];
-            NSLog(@"destroy %@", task);
+//            NSLog(@"destroy %@", task);
         }
     }
 }

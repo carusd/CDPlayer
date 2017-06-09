@@ -581,7 +581,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 #pragma load
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
     
-    NSLog(@"loading request %@", loadingRequest);
+//    NSLog(@"loading request %@", loadingRequest);
     
     BOOL fed = [self tryToFeedRequest:loadingRequest];
     
