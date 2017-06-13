@@ -24,12 +24,12 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 
 - (void)play {
     [super play];
-    NSLog(@"hm??????????");
+    
 }
 
 - (void)setRate:(float)rate {
     [super setRate:rate];
-    NSLog(@"huh???????????");
+    
 }
 
 @end
@@ -449,6 +449,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         
         
     } else {
+        [self.playerItem seekToTime:kCMTimeZero];
         self.state = CDPlayerStateStop;
         
     }
