@@ -295,8 +295,8 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 }
 
 - (BOOL)couldPlay {
-//    return AVPlayerItemStatusReadyToPlay == self.playerItem.status;
-    return self.playerItem.isPlaybackLikelyToKeepUp;
+    return AVPlayerItemStatusReadyToPlay == self.playerItem.status;
+//    return self.playerItem.isPlaybackLikelyToKeepUp;
 }
 
 - (void)continueToBuffer {
@@ -548,11 +548,11 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     __weak CDPlayer *wself = self;
     [self.task.loadedVideoBlocks enumerateObjectsUsingBlock:^(CDVideoBlock *videoBlock, NSUInteger idx, BOOL *stop) {
         long long readingDataLength;
-        if ([UIDevice currentDevice].systemVersion.floatValue >= 9 && loadingRequest.dataRequest.requestsAllDataToEndOfResource) {
+//        if ([UIDevice currentDevice].systemVersion.floatValue >= 9 && loadingRequest.dataRequest.requestsAllDataToEndOfResource) {
             readingDataLength = MIN(loadingRequest.dataRequest.requestedLength, [CDVideoDownloadTask VideoBlockSize]);
-        } else {
-            readingDataLength = loadingRequest.dataRequest.requestedLength;
-        }
+//        } else {
+//            readingDataLength = loadingRequest.dataRequest.requestedLength;
+//        }
         
         
         CDVideoBlock *requestedBlock = [[CDVideoBlock alloc] initWithOffset:startOffset length:readingDataLength];
