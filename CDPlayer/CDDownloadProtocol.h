@@ -71,10 +71,12 @@ typedef enum : int64_t {
     CDVideoDownloadStateWaiting,
     CDVideoDownloadStateLoading,
     CDVideoDownloadStatePause,
-    CDVideoDownloadStateLoadError,
+    CDVideoDownloadStateLoadError,    // deprecated，用CDVideoDownloadStateError，并从error变量获取具体错误原因
     CDVideoDownloadStateLoaded,       // 分段下载时，有时候会跳到后面一段继续下载，这时候下载完时其实是不完整的，这种状态用Finished来表示
     CDVideoDownloadStateFinished,     // 不仅仅下载到最后，而且文件是完整下载好的
-    CDVideoDownloadStateInit          // 刚刚初始化
+    CDVideoDownloadStateInit,          // 刚刚初始化
+    CDVideoDownloadStatePreparing,     // 下载文件前2个字节
+    CDVideoDownloadStateError         //
 } CDVideoDownloadState;
 
 typedef enum : NSUInteger {
@@ -83,6 +85,8 @@ typedef enum : NSUInteger {
 } CDVideoDownloadTaskPriority;
 
 typedef enum : NSUInteger {
+    CDPlayerStatePreparing,
+    CDPlayerStateStandby,
     CDPlayerStatePlaying,
     CDPlayerStateError,
     CDPlayerStatePause,

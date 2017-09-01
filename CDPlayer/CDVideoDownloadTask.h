@@ -12,6 +12,14 @@
 #import "CDVideoBlock.h"
 #import "AFNetworking.h"
 
+extern NSString * const CDVideoDownloadErrorDomain;
+
+typedef enum : NSUInteger {
+    CDVideoDownloadTaskErrorCodeLoadError,
+    CDVideoDownloadTaskErrorCodePrepareLoadError,
+    CDVideoDownloadTaskErrorCodeCreateFileHandleError
+} CDVideoDownloadTaskErrorCode;
+
 extern NSString * const CDVideoDownloadStateDidChangedNotif;
 extern NSString * const CDVideoDownloadTaskDidHasNewBlockNotif;
 extern NSString * const CDVideoDownloadTaskInconsistenceNotif;
@@ -50,7 +58,7 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 
 @property (nonatomic, readonly) id<CDVideoInfoProvider> infoProvider;
 
-@property (nonatomic) NSInteger frequency; // 下载频率，通过添加下载等待时间来控制宽带占用
+@property (nonatomic) NSUInteger frequency; // 下载频率，通过添加下载等待时间来控制宽带占用
 
 - (long long)sizeInDisk;
 

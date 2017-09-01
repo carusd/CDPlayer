@@ -100,11 +100,11 @@
         return;
     }
     if (self.loadingTasks.count < self.maxConcurrentNum) {
-//        NSLog(@"load ba %@", task.videoURLPath);
+
         [task load];
         
     } else if (CDVideoDownloadTaskPriorityImmediate == task.priority){
-//        NSLog(@"any way load ba %@", task.videoURLPath);
+
         NSArray *loadingTasks = [self loadingTasks];
         for (CDVideoDownloadTask *loadingTask in loadingTasks) {
             if (CDVideoDownloadTaskPriorityImmediate == loadingTask.priority) {
@@ -116,7 +116,7 @@
         
         [task load];
     } else {
-//        NSLog(@"no...wait ba %@", task.videoURLPath);
+
         [task yield];
     }
 }
@@ -196,6 +196,7 @@
     [task addTag:self.tag];
     
     [self addTask:task];
+    
     return task;
 }
 

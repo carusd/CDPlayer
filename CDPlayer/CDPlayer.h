@@ -12,9 +12,6 @@
 
 extern NSString * const CDPlayerDidSeekToPositionNotif;
 
-
-
-
 @interface CDPlayer : NSObject
 
 - (id)initWithInfo:(id<CDVideoInfoProvider>)infoProvider;
@@ -22,23 +19,17 @@ extern NSString * const CDPlayerDidSeekToPositionNotif;
 
 @property (nonatomic, readonly) AVPlayer *player;
 @property (nonatomic, readonly) CDPlayerState state;
-
 @property (nonatomic, readonly) NSError *error;
-
 @property (nonatomic) BOOL loop;
 @property (nonatomic ,readonly) BOOL fromLocalFile;
-
-@property (nonatomic) BOOL playOnWhileKeepUp;
-@property (nonatomic) BOOL allowLoadingInWWAN;
-
-
 @property (nonatomic, readonly) CDVideoDownloadTask *task;
 
-- (void)replaceCurrentVideoWithVideo:(id<CDVideoInfoProvider>)infoProvider;
+
 
 + (NSString *)dispatcherTag;
 + (id<CDVideoDownloadTaskDispatcher>)dispatcher;
 
+- (void)play:(void(^)(void))callback;
 - (void)play;
 - (void)pause;
 - (void)stop;
