@@ -286,16 +286,16 @@ static NSString * _CacheDirectoryName;
     [self notifyStateChanged];
     [self save];
     
-    dispatch_async(self.cache_queue, ^{
-        [self pushOffset:0];
+//    dispatch_async(self.cache_queue, ^{
+//        [self pushOffset:0];
 //        _VideoBlockSize = 2;
-        [self _loadBlock];
+//        [self _loadBlock];
 //        [CDVideoDownloadTask resetVideoBlockSize];
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
+//        
+//        dispatch_async(dispatch_get_main_queue(), ^{
             [self standby];
-        });
-    });
+//        });
+//    });
     
 }
 

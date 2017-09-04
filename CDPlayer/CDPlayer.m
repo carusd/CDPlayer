@@ -121,70 +121,70 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
     NSString *localURLPath = [NSString stringWithFormat:@"%@/%@", prefix, infoProvider.localURLPath];
     
+    __weak CDPlayer *wself = self;
+    void(^setupPlayer)(void) = ^{
+        wself.playerItem = [CDPlayerItem playerItemWithAsset:wself.asset];
+        [[NSNotificationCenter defaultCenter] addObserver:wself selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:wself.playerItem];
+        [[NSNotificationCenter defaultCenter] addObserver:wself selector:@selector(moviePlayDidStalled:) name:AVPlayerItemPlaybackStalledNotification object:wself.playerItem];
+        
+        wself.requests = [NSMutableArray array];
+        
+        [wself.playerItem addObserver:wself forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:NULL];
+        [wself.playerItem addObserver:wself forKeyPath:@"playbackBufferEmpty" options:NSKeyValueObservingOptionNew context:NULL];
+        [wself.playerItem addObserver:wself forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:NULL];
+        
+        wself.player = [CDPlayerInternal playerWithPlayerItem:wself.playerItem];
+        if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 10) {
+            wself.player.automaticallyWaitsToMinimizeStalling = NO;
+        }
+        
+        wself.state = CDPlayerStateStandby;
+    };
     
     if (infoProvider.completelyLoaded) {
         self.asset = [AVURLAsset assetWithURL:[NSURL fileURLWithPath:localURLPath]];
         self.fromLocalFile = YES;
+        
+        self.preparing_q = dispatch_queue_create("com.carusd.player.preparing", DISPATCH_QUEUE_CONCURRENT);
+        
+        [self.asset loadValuesAsynchronouslyForKeys:@[@"duration"] completionHandler:^{
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSError *e = nil;
+                AVKeyValueStatus status = [wself.asset statusOfValueForKey:@"duration" error:&e];
+                if (AVKeyValueStatusLoaded == status) {
+                    
+                    setupPlayer();
+                } else if (AVKeyValueStatusFailed == status) {
+                    wself.error = e;
+                    wself.state = CDPlayerStateError;
+                } else if (AVKeyValueStatusUnknown == status) {
+                    wself.error = [[NSError alloc] initWithDomain:@"com.carusd.player" code:status userInfo:@{NSLocalizedFailureReasonErrorKey: @"load key unknown error"}];
+                    wself.state = CDPlayerStateError;
+                } else if (AVKeyValueStatusCancelled == status) {
+                    wself.error = [[NSError alloc] initWithDomain:@"com.carusd.player" code:status userInfo:@{NSLocalizedFailureReasonErrorKey: @"load key cancelled"}];
+                    wself.state = CDPlayerStateError;
+                }
+            });
+            
+        }];
     } else {
         
         self.task = [[CDPlayer dispatcher] makeTaskWithInfo:infoProvider];
-        [self.task pushOffset:0]; // 有些任务可能是下载到一半的，这里重置下载位置，确保开始的播放
+        
 
         
         NSURLComponents *videoURLComponents = [[NSURLComponents alloc] initWithURL:[NSURL URLWithString:self.task.videoURLPath] resolvingAgainstBaseURL:NO];
         videoURLComponents.scheme = @"streaming";
         self.asset = [AVURLAsset assetWithURL:videoURLComponents.URL];
         [self.asset.resourceLoader setDelegate:self queue:dispatch_get_main_queue()];
-//        self.asset = [AVURLAsset assetWithURL:[NSURL URLWithString:infoProvider.videoURLPath]];
+
         
         NSError *e = nil;
         self.fileHandle = [NSFileHandle fileHandleForReadingFromURL:[NSURL fileURLWithPath:localURLPath] error:&e];
         
-        self.fromLocalFile = NO;
-        
-        self.preparing_q = dispatch_queue_create("com.carusd.player.preparing", DISPATCH_QUEUE_CONCURRENT);
+        setupPlayer();
     }
-    
-    
-    __weak CDPlayer *wself = self;
-    [self.asset loadValuesAsynchronouslyForKeys:@[@"duration"] completionHandler:^{
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            NSError *e = nil;
-            AVKeyValueStatus status = [wself.asset statusOfValueForKey:@"duration" error:&e];
-            if (AVKeyValueStatusLoaded == status) {
-                NSLog(@"genrating player item  %@", [wself.provider videoURLPath]);
-                wself.playerItem = [CDPlayerItem playerItemWithAsset:wself.asset];
-                [[NSNotificationCenter defaultCenter] addObserver:wself selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:wself.playerItem];
-                [[NSNotificationCenter defaultCenter] addObserver:wself selector:@selector(moviePlayDidStalled:) name:AVPlayerItemPlaybackStalledNotification object:wself.playerItem];
-                
-                wself.requests = [NSMutableArray array];
-                
-                [wself.playerItem addObserver:wself forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:NULL];
-                [wself.playerItem addObserver:wself forKeyPath:@"playbackBufferEmpty" options:NSKeyValueObservingOptionNew context:NULL];
-                [wself.playerItem addObserver:wself forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:NULL];
-                
-                wself.player = [CDPlayerInternal playerWithPlayerItem:wself.playerItem];
-                if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 10) {
-                    wself.player.automaticallyWaitsToMinimizeStalling = NO;
-                }
-                
-                wself.state = CDPlayerStateStandby;
-                
-                NSLog(@"player item ready");
-            } else if (AVKeyValueStatusFailed == status) {
-                wself.error = e;
-                wself.state = CDPlayerStateError;
-            } else if (AVKeyValueStatusUnknown == status) {
-                wself.error = [[NSError alloc] initWithDomain:@"com.carusd.player" code:status userInfo:@{NSLocalizedFailureReasonErrorKey: @"load key unknown error"}];
-                wself.state = CDPlayerStateError;
-            } else if (AVKeyValueStatusCancelled == status) {
-                wself.error = [[NSError alloc] initWithDomain:@"com.carusd.player" code:status userInfo:@{NSLocalizedFailureReasonErrorKey: @"load key cancelled"}];
-                wself.state = CDPlayerStateError;
-            }
-        });
-        
-    }];
 
     
 }
@@ -626,6 +626,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 
 - (void)resourceLoader:(AVAssetResourceLoader *)resourceLoader didCancelLoadingRequest:(AVAssetResourceLoadingRequest *)loadingRequest
 {
+    
     [self.requests removeObject:loadingRequest];
     
 }
