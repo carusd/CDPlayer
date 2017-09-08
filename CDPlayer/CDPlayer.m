@@ -113,6 +113,28 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 }
 
 
+- (void)setupPlayer {
+    if (!self.player) {
+        self.playerItem = [CDPlayerItem playerItemWithAsset:self.asset];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(moviePlayDidStalled:) name:AVPlayerItemPlaybackStalledNotification object:self.playerItem];
+        
+        self.requests = [NSMutableArray array];
+        
+        [self.playerItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:NULL];
+        [self.playerItem addObserver:self forKeyPath:@"playbackBufferEmpty" options:NSKeyValueObservingOptionNew context:NULL];
+        [self.playerItem addObserver:self forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:NULL];
+        
+        self.player = [CDPlayerInternal playerWithPlayerItem:self.playerItem];
+        if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 10) {
+            self.player.automaticallyWaitsToMinimizeStalling = NO;
+        }
+        
+        self.state = CDPlayerStateStandby;
+    }
+    
+}
+
 - (void)setupWithInfoProvider:(id<CDVideoInfoProvider>)infoProvider {
     self.state = CDPlayerStatePreparing;
     
@@ -121,32 +143,13 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
     NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
     NSString *localURLPath = [NSString stringWithFormat:@"%@/%@", prefix, infoProvider.localURLPath];
     
-    __weak CDPlayer *wself = self;
-    void(^setupPlayer)(void) = ^{
-        wself.playerItem = [CDPlayerItem playerItemWithAsset:wself.asset];
-        [[NSNotificationCenter defaultCenter] addObserver:wself selector:@selector(moviePlayDidEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:wself.playerItem];
-        [[NSNotificationCenter defaultCenter] addObserver:wself selector:@selector(moviePlayDidStalled:) name:AVPlayerItemPlaybackStalledNotification object:wself.playerItem];
-        
-        wself.requests = [NSMutableArray array];
-        
-        [wself.playerItem addObserver:wself forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:NULL];
-        [wself.playerItem addObserver:wself forKeyPath:@"playbackBufferEmpty" options:NSKeyValueObservingOptionNew context:NULL];
-        [wself.playerItem addObserver:wself forKeyPath:@"playbackLikelyToKeepUp" options:NSKeyValueObservingOptionNew context:NULL];
-        
-        wself.player = [CDPlayerInternal playerWithPlayerItem:wself.playerItem];
-        if ([[[UIDevice currentDevice] systemVersion] floatValue] >= 10) {
-            wself.player.automaticallyWaitsToMinimizeStalling = NO;
-        }
-        
-        wself.state = CDPlayerStateStandby;
-    };
-    
     if (infoProvider.completelyLoaded) {
         self.asset = [AVURLAsset assetWithURL:[NSURL fileURLWithPath:localURLPath]];
         self.fromLocalFile = YES;
         
         self.preparing_q = dispatch_queue_create("com.carusd.player.preparing", DISPATCH_QUEUE_CONCURRENT);
         
+        __weak CDPlayer *wself = self;
         [self.asset loadValuesAsynchronouslyForKeys:@[@"duration"] completionHandler:^{
             
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -154,7 +157,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
                 AVKeyValueStatus status = [wself.asset statusOfValueForKey:@"duration" error:&e];
                 if (AVKeyValueStatusLoaded == status) {
                     
-                    setupPlayer();
+                    [wself setupPlayer];
                 } else if (AVKeyValueStatusFailed == status) {
                     wself.error = e;
                     wself.state = CDPlayerStateError;
@@ -183,7 +186,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         NSError *e = nil;
         self.fileHandle = [NSFileHandle fileHandleForReadingFromURL:[NSURL fileURLWithPath:localURLPath] error:&e];
         
-        setupPlayer();
+        [self setupPlayer];
     }
 
     
@@ -283,20 +286,12 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 
 - (void)play:(void(^)(void))callback {
     if (CDPlayerStatePreparing == self.state) {
-        
-        dispatch_async(self.preparing_q, ^{
-            
-            while (CDPlayerStatePreparing == _state) {
-                NSLog(@"hhhhhhhhh  %d", _state);
-            }
-            
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self _play];
-                if (callback) {
-                    callback();
-                }
-            });
-        });
+        // setup player even though the asset hasnt load the key
+        [self setupPlayer];
+        [self _play];
+        if (callback) {
+            callback();
+        }
     } else {
         [self _play];
         if (callback) {
@@ -609,7 +604,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 #pragma load
 - (BOOL)resourceLoader:(AVAssetResourceLoader *)resourceLoader shouldWaitForLoadingOfRequestedResource:(AVAssetResourceLoadingRequest *)loadingRequest {
     
-    NSLog(@"loading request %@", loadingRequest);
+//    NSLog(@"loading request %@", loadingRequest);
     
     BOOL fed = [self tryToFeedRequest:loadingRequest];
     
