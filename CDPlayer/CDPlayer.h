@@ -11,6 +11,7 @@
 #import "CDVideoDownloadTask.h"
 
 extern NSString * const CDPlayerDidSeekToPositionNotif;
+extern NSString * const CDPlayerItemDidPlayToEndTimeNotif;
 
 @interface CDPlayer : NSObject
 
@@ -23,7 +24,7 @@ extern NSString * const CDPlayerDidSeekToPositionNotif;
 @property (nonatomic) BOOL loop;
 @property (nonatomic ,readonly) BOOL fromLocalFile;
 @property (nonatomic, readonly) CDVideoDownloadTask *task;
-
+@property (nonatomic, readonly) CGFloat playProgress;
 
 
 + (NSString *)dispatcherTag;

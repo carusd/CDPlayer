@@ -15,6 +15,7 @@
 #import "CDVideoBlock.h"
 
 NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNotif";
+NSString * const CDPlayerItemDidPlayToEndTimeNotif = @"CDPlayerItemDidPlayToEndTimeNotif";
 
 @interface CDPlayerItem : AVPlayerItem
 
@@ -261,6 +262,16 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
 
 
 #pragma control
+- (CGFloat)playProgress {
+    CGFloat duration = CMTimeGetSeconds(self.playerItem.duration);
+    if (duration == 0) {
+        return 0;
+    } else {
+        return CMTimeGetSeconds(self.playerItem.currentTime) / CMTimeGetSeconds(self.playerItem.duration);
+    }
+    
+}
+
 - (void)_play {
     if (CDPlayerStatePlaying == self.state || CDPlayerStateBuffering == self.state) {
         return;
@@ -477,6 +488,7 @@ NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNot
         
     }
     
+    [[NSNotificationCenter defaultCenter] postNotificationName:CDPlayerItemDidPlayToEndTimeNotif object:self.provider];
 }
 
 - (void)handleTaskStateDidChanged:(NSNotification *)notif {
