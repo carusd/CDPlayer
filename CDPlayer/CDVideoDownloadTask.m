@@ -11,7 +11,7 @@
 #import "CDVideoDownloadManager.h"
 #import "FileHash.h"
 #import "AFNetworking.h"
-#import "CocoaLumberjack.h"
+
 
 NSString * const CDVideoDownloadErrorDomain = @"com.carusd.player.task.error";
 
@@ -82,8 +82,6 @@ static NSString * _CacheDirectoryName;
 - (id)initWithVideoInfoProvider:(id<CDVideoInfoProvider>)provider taskURLPath:(NSString *)taskURLPath {
     self = [super init];
     if (self) {
-        DDFileLogger *fileLogger = [[DDFileLogger alloc] init];
-        DDLogFileManagerDefault
         
         self.state = CDVideoDownloadStateInit;
         
