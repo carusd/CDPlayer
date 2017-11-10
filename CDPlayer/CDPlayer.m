@@ -13,6 +13,7 @@
 #import "CDVideoDownloadTask.h"
 #import "CDVideoDownloadMegaManager.h"
 #import "CDVideoBlock.h"
+#import "NSString+CDFilePath.h"
 
 NSString * const CDPlayerDidSeekToPositionNotif = @"CDPlayerDidSeekToPositionNotif";
 NSString * const CDPlayerItemDidPlayToEndTimeNotif = @"CDPlayerItemDidPlayToEndTimeNotif";
@@ -141,8 +142,7 @@ NSString * const CDPlayerItemDidPlayToEndTimeNotif = @"CDPlayerItemDidPlayToEndT
     
     self.provider = infoProvider;
     
-    NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
-    NSString *localURLPath = [NSString stringWithFormat:@"%@/%@", prefix, infoProvider.localURLPath];
+    NSString *localURLPath = [NSString toAbsolute:infoProvider.localURLPath];
     
     if (infoProvider.completelyLoaded) {
         self.asset = [AVURLAsset assetWithURL:[NSURL fileURLWithPath:localURLPath]];
@@ -329,8 +329,8 @@ NSString * const CDPlayerItemDidPlayToEndTimeNotif = @"CDPlayerItemDidPlayToEndT
 }
 
 - (BOOL)couldPlay {
-    return AVPlayerItemStatusReadyToPlay == self.playerItem.status;
-//    return self.playerItem.isPlaybackLikelyToKeepUp;
+//    return AVPlayerItemStatusReadyToPlay == self.playerItem.status;
+    return self.playerItem.isPlaybackLikelyToKeepUp;
 }
 
 - (void)continueToBuffer {

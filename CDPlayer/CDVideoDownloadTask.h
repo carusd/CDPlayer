@@ -10,7 +10,7 @@
 #import "CDDownloadProtocol.h"
 #import <UIKit/UIKit.h>
 #import "CDVideoBlock.h"
-#import "AFNetworking.h"
+
 
 extern NSString * const CDVideoDownloadErrorDomain;
 
@@ -38,7 +38,7 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 
 - (id)initWithVideoInfoProvider:(id<CDVideoInfoProvider>)provider taskURLPath:(NSString *)taskURLPath;
 
-@property (nonatomic, readonly) AFHTTPSessionManager *httpManager;
+
 
 @property (nonatomic, readonly) NSString *taskURLPath;
 @property (readonly) CDVideoDownloadState state;
@@ -48,6 +48,7 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 @property (nonatomic, readonly) NSArray<CDVideoBlock *> *loadedVideoBlocks; // 表示已经下载的时间区间
 @property (nonatomic, readonly) NSArray<CDVideoNormalizedBlock *> *loadedVideoRanges; //同上，但是这是正则化表示，范围是0-1
 @property (nonatomic, readonly) CGFloat progress;
+@property (nonatomic, readonly) NSString *videoFileMD5;
 @property (nonatomic, readonly) NSArray<NSString *> *tags;
 @property (nonatomic, readonly) NSError *error;  // 当下载出错时，这里会记录出错原因。否则为nil
 
@@ -57,6 +58,7 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 @property (nonatomic) NSTimeInterval createTime;
 
 @property (nonatomic, readonly) id<CDVideoInfoProvider> infoProvider;
+
 
 @property (nonatomic) NSUInteger frequency; // 下载频率，通过添加下载等待时间来控制宽带占用
 
@@ -76,14 +78,8 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 - (void)destroy; // 删除视频文件和task文件
 - (void)pushOffset:(long long)offset;
 
-
 + (void)setVideoBlockSize:(long long)size;
 + (long long)VideoBlockSize;
 
-+ (void)setCacheDirectoryName:(NSString *)name;
-+ (NSString *)CacheDirectoryName;
-
-+ (void)setCachePath:(NSString *)path;
-+ (NSString *)CachePath;
 
 @end

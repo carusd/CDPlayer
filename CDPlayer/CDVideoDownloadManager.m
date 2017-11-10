@@ -182,14 +182,8 @@
     
     NSString *filename = [[[provider videoURLPath] lastPathComponent] stringByDeletingPathExtension];
     
-    NSString *taskURLPath = [NSString stringWithFormat:@"%@/%@", [self.persistenceManager cacheDirURLPath], filename];
+    NSString *taskURLPath = [NSString stringWithFormat:@"%@/%@", [self.persistenceManager taskDirURLAbsolutePath], filename];
     
-    NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
-    NSString *taskDirCompletedURLPath = [NSString stringWithFormat:@"%@/%@", prefix, [self.persistenceManager cacheDirURLPath]];
-    BOOL *isDir;
-    if (![[NSFileManager defaultManager] fileExistsAtPath:taskDirCompletedURLPath isDirectory:&isDir]) {
-        [[NSFileManager defaultManager] createDirectoryAtPath:taskDirCompletedURLPath withIntermediateDirectories:YES attributes:nil error:nil];
-    }
     
     task = [[CDVideoDownloadTask alloc] initWithVideoInfoProvider:provider taskURLPath:taskURLPath];
     task.label = [provider title];

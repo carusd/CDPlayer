@@ -9,8 +9,9 @@
 #import "CDVideoDownloadMegaManager.h"
 #import "CDVideoDownloadManager.h"
 #import "CDVideoDownloadTask.h"
+#import "NSString+CDFilePath.h"
 
-NSString * const CDVideoDownloadDirURLDidChanged = @"CDVideoDownloadDirURLDidChanged";
+
 
 @interface CDVideoDownloadMegaManager ()
 
@@ -38,8 +39,9 @@ NSString * const CDVideoDownloadDirURLDidChanged = @"CDVideoDownloadDirURLDidCha
     if (self) {
         self.dispatchers = [NSMutableDictionary dictionary];
         
+        self.taskDirName = @"com.carusd.videotask";
+        self.videoDirName = @"com.carusd.video";
         
-        [self setCacheDirURLPath:@"com.carusd.videotask"];
     }
     return self;
 }
@@ -71,18 +73,33 @@ NSString * const CDVideoDownloadDirURLDidChanged = @"CDVideoDownloadDirURLDidCha
     
 }
 
-- (void)setCacheDirURLPath:(NSString *)path {
-    _cacheDirURLPath = path;
-    NSString *cachePath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
-    NSString *tasksDirPath = [NSString stringWithFormat:@"%@/%@", cachePath, self.cacheDirURLPath];
+- (void)setTaskDirName:(NSString *)taskDirName {
+    _taskDirName = taskDirName;
     
-    if (![[NSFileManager defaultManager] fileExistsAtPath:tasksDirPath]) {
-        [[NSFileManager defaultManager] createDirectoryAtPath:tasksDirPath withIntermediateDirectories:YES attributes:nil error:nil];
-    }
-    [[NSNotificationCenter defaultCenter] postNotificationName:CDVideoDownloadDirURLDidChanged object:nil];
+    [NSString ensureDirExsit:[NSString toAbsolute:taskDirName]];
 }
 
+- (void)setVideoDirName:(NSString *)videoDirName {
+    _videoDirName = videoDirName;
+    
+    [NSString ensureDirExsit:[NSString toAbsolute:videoDirName]];
+}
 
+- (NSString *)taskDirURLAbsolutePath {
+    
+    NSString *tasksDirPath = [NSString toAbsolute:self.taskDirName];
+    
+    [NSString ensureDirExsit:tasksDirPath];
+    
+    return tasksDirPath;
+}
+
+- (NSString *)videoDirURLAbsolutePath {
+    NSString *videoDirPath = [NSString toAbsolute:self.videoDirName];
+    [NSString ensureDirExsit:videoDirPath];
+    
+    return videoDirPath;
+}
 
 - (void)addTask:(CDVideoDownloadTask *)task {
     if (![self.allTasks containsObject:task]) {
@@ -104,17 +121,15 @@ NSString * const CDVideoDownloadDirURLDidChanged = @"CDVideoDownloadDirURLDidCha
 - (NSMutableArray *)allTasks {
     if (!_allTasks) {
         _allTasks = [NSMutableArray array];
-        
-        
-        NSString *cachePath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
-        NSString *tasksDirPath = [NSString stringWithFormat:@"%@/%@", cachePath, self.cacheDirURLPath];
-        NSArray *contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:tasksDirPath error:nil];
+
+        NSArray *contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:self.taskDirURLAbsolutePath error:nil];
         
         @autoreleasepool {
             for (NSString *contentPath in contents) {
-                NSString *path = [NSString stringWithFormat:@"%@/%@", tasksDirPath, contentPath];
+                NSString *path = [NSString stringWithFormat:@"%@/%@", self.taskDirURLAbsolutePath, contentPath];
                 CDVideoDownloadTask *task = [NSKeyedUnarchiver unarchiveObjectWithFile:path];
                 if (task) {
+                    
                     [_allTasks addObject:task];
                 }
                 

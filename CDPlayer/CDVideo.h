@@ -11,13 +11,16 @@
 
 @interface CDVideo : NSObject<CDVideoInfoProvider>
 
-@property (nonatomic, strong) NSURL *videoURL;
-@property (nonatomic, strong) NSURL *localURL;
-@property (nonatomic) NSInteger duration; // 单位为秒
-@property (nonatomic, copy) NSString *title;
-@property (nonatomic) BOOL completelyLoaded;
-@property (nonatomic) int64_t size; // 单位为byte
+@property (nonatomic, strong) NSString *videoURLPath;
 
-- (id)initWithPath:(NSString *)path;
+@property (nonatomic) int64_t duration; // 单位为秒
+@property (nonatomic, copy) NSString *title;
+@property (nonatomic) int64_t size; // 单位为byte
+@property (nonatomic) int64_t width;
+@property (nonatomic) int64_t height;
+@property (nonatomic, copy) NSString *md5;
+@property (readonly) BOOL completelyLoaded;
+
+- (id)initWithVideoURLPath:(NSString *)path;
 
 @end

@@ -12,5 +12,6 @@
 #import "CDVideoDownloadMegaManager.h"
 #import "CDVideoDownloadTask.h"
 #import "CDPlayer.h"
+#import "NSString+CDFilePath.h"
 
 

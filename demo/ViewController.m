@@ -22,7 +22,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    CDVideo *video = [[CDVideo alloc] initWithPath:@"http://fanhe.dwstatic.com/shortvideo/02/201610/001/3d93b82d668cee57e5104f8950890000.mp4"];
+    CDVideo *video = [[CDVideo alloc] initWithVideoURLPath:@"http://fanhe.dwstatic.com/shortvideo/02/201610/001/3d93b82d668cee57e5104f8950890000.mp4"];
     
     self.manager = [[CDVideoDownloadMegaManager sharedInstance] dispatcherWithTag:@"viewController" class:nil];
     

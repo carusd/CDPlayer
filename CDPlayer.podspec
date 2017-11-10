@@ -21,4 +21,5 @@ Pod::Spec.new do |s|
   s.source_files = 'CDPlayer/*.{h,m}'
 
   s.dependency 'AFNetworking'
+  s.dependency 'FileMD5Hash'
 end

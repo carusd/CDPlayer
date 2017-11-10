@@ -7,8 +7,11 @@
 //
 
 #import "CDVideoDownloadTask.h"
-
+#import "NSString+CDFilePath.h"
 #import "CDVideoDownloadManager.h"
+#import "FileHash.h"
+#import "AFNetworking.h"
+#import "CocoaLumberjack.h"
 
 NSString * const CDVideoDownloadErrorDomain = @"com.carusd.player.task.error";
 
@@ -31,6 +34,7 @@ NSString * const CDVideoDownloadBackgroundSessionIdentifier = @"CDVideoDownloadB
 @property (nonatomic, strong) NSString *taskURLPath;
 @property (nonatomic) CDVideoDownloadState state;
 @property (nonatomic, strong) NSError *error;
+@property (nonatomic, copy) NSString *videoFileMD5;
 
 @property (nonatomic, strong) NSMutableArray<CDVideoBlock *> *loadedBlocks;
 
@@ -71,40 +75,6 @@ static NSString * _CacheDirectoryName;
     _VideoBlockSize = DefaultDownloadSize;
 }
 
-+ (void)setCacheDirectoryName:(NSString *)name {
-    _CacheDirectoryName = name;
-    [self ensureTargetDirectoryExist];
-}
-
-+ (NSString *)CacheDirectoryName {
-    return _CacheDirectoryName;
-}
-
-+ (void)setCachePath:(NSString *)path {
-    _CachePath = path;
-    [self ensureTargetDirectoryExist];
-}
-
-+ (NSString *)CachePath {
-    return _CachePath;
-}
-
-+ (void)ensureTargetDirectoryExist {
-    if (![[NSFileManager defaultManager] fileExistsAtPath:_CachePath]) {
-        NSError *e = nil;
-        [[NSFileManager defaultManager] createDirectoryAtPath:_CachePath withIntermediateDirectories:YES attributes:nil error:&e];
-//        NSLog(@"create video cache dir error  %@", e);
-    }
-}
-
-+ (void)load {
-    _CacheDirectoryName = @"com.carusd.video";
-    NSString *cachePath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
-    _CachePath = [NSString stringWithFormat:@"%@/%@", cachePath, _CacheDirectoryName];
-    
-    [self ensureTargetDirectoryExist];
-}
-
 - (void)dealloc {
     [_httpManager invalidateSessionCancelingTasks:YES];
 }
@@ -112,6 +82,9 @@ static NSString * _CacheDirectoryName;
 - (id)initWithVideoInfoProvider:(id<CDVideoInfoProvider>)provider taskURLPath:(NSString *)taskURLPath {
     self = [super init];
     if (self) {
+        DDFileLogger *fileLogger = [[DDFileLogger alloc] init];
+        DDLogFileManagerDefault
+        
         self.state = CDVideoDownloadStateInit;
         
         self.infoProvider = provider;
@@ -141,15 +114,16 @@ static NSString * _CacheDirectoryName;
         self.nextOffset = -1;
         
         self.error = nil;
+        self.videoFileMD5 = @"";
         
-        if ([[NSFileManager defaultManager] fileExistsAtPath:[self absolutePathWithRelativePath:self.localURLPath]]) {
-            [[NSFileManager defaultManager] removeItemAtURL:[NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.localURLPath]] error:nil];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:self.completeLocalPath]) {
+            [[NSFileManager defaultManager] removeItemAtURL:[NSURL fileURLWithPath:self.completeLocalPath] error:nil];
         }
         
         
-        [[NSFileManager defaultManager] createFileAtPath:[self absolutePathWithRelativePath:self.localURLPath] contents:nil attributes:nil];
+        [[NSFileManager defaultManager] createFileAtPath:self.completeLocalPath contents:nil attributes:nil];
         
-        NSURL *writingURL = [NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.localURLPath]];
+        NSURL *writingURL = [NSURL fileURLWithPath:self.completeLocalPath];
         NSError *e = nil;
         self.fileHandle = [NSFileHandle fileHandleForWritingToURL:writingURL error:&e];
         if (!self.fileHandle) {
@@ -174,10 +148,6 @@ static NSString * _CacheDirectoryName;
     self = [super init];
     if (self) {
 
-        self.state = [aDecoder decodeIntegerForKey:@"state"];
-        if (CDVideoDownloadStateLoading == self.state) {
-            self.state = CDVideoDownloadStatePause;
-        }
         self.videoURLPath = [aDecoder decodeObjectForKey:@"videoURLPath"];
         self.taskURLPath = [aDecoder decodeObjectForKey:@"taskURLPath"];
         self.localURLPath = [aDecoder decodeObjectForKey:@"localURLPath"];
@@ -189,8 +159,26 @@ static NSString * _CacheDirectoryName;
         self.error = [aDecoder decodeObjectForKey:@"error"];
         self.label = [aDecoder decodeObjectForKey:@"label"];
         self.createTime = [aDecoder decodeDoubleForKey:@"createTime"];
+        self.videoFileMD5 = [aDecoder decodeObjectForKey:@"videoFileMD5"];
         
         self.infoProvider = [aDecoder decodeObjectForKey:@"infoProvider"];
+        
+        self.state = [aDecoder decodeIntegerForKey:@"state"];
+        if (CDVideoDownloadStateLoading == self.state) {
+            self.state = CDVideoDownloadStatePause;
+        } else if (CDVideoDownloadStateFinished == self.state) {
+            if (![[NSFileManager defaultManager] fileExistsAtPath:self.completeLocalPath]) {
+                self.state = CDVideoDownloadStateInit;
+                self.loadedBlocks = [NSMutableArray array];
+                self.totalBytes = 0;
+                self.nextOffset = -1;
+                self.error = nil;
+                self.videoFileMD5 = @"";
+                
+                [[NSFileManager defaultManager] createFileAtPath:self.completeLocalPath contents:nil attributes:nil];
+            }
+            
+        }
         
         if (CDVideoDownloadStateFinished != self.state) {
             self.cache_queue = dispatch_queue_create([self.videoURLPath UTF8String], DISPATCH_QUEUE_CONCURRENT);
@@ -199,12 +187,11 @@ static NSString * _CacheDirectoryName;
             self.httpManager.responseSerializer = [AFHTTPResponseSerializer serializer];
             self.httpManager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"video/mp4", @"text/html", @"application/octet-stream", nil];
             self.httpManager.completionQueue = self.cache_queue;
+            
+            NSURL *writingURL = [NSURL fileURLWithPath:self.completeLocalPath];
+            NSError *e = nil;
+            self.fileHandle = [NSFileHandle fileHandleForWritingToURL:writingURL error:&e];
         }
-        
-        
-        NSURL *writingURL = [NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.localURLPath]];
-        NSError *e = nil;
-        self.fileHandle = [NSFileHandle fileHandleForWritingToURL:writingURL error:&e];
         
     }
     
@@ -225,31 +212,23 @@ static NSString * _CacheDirectoryName;
     [aCoder encodeObject:self.error forKey:@"error"];
     [aCoder encodeObject:self.label forKey:@"label"];
     [aCoder encodeDouble:self.createTime forKey:@"createTime"];
+    [aCoder encodeObject:self.videoFileMD5 forKey:@"videoFileMD5"];
     [aCoder encodeObject:self.infoProvider forKey:@"infoProvider"];
     
     
 }
 
 - (NSString *)completeLocalPath {
-    NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
-    return [NSString stringWithFormat:@"%@/%@", prefix, self.localURLPath];
-}
-
-- (NSString *)absolutePathWithRelativePath:(NSString *)path {
-    NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
-    return [NSString stringWithFormat:@"%@/%@", prefix, path];
+    return [NSString toAbsolute:self.localURLPath];
 }
 
 - (long long)sizeInDisk {
-    NSString *prefix = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES).firstObject;
-    
-    
     NSError *e = nil;
-    NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[NSString stringWithFormat:@"%@/%@", prefix, self.localURLPath] error:&e];
+    NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:self.completeLocalPath error:&e];
     
     long long fileSize = [fileAttributes[NSFileSize] longLongValue];
     
-    NSDictionary *taskAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[NSString stringWithFormat:@"%@/%@", prefix, self.taskURLPath] error:nil];
+    NSDictionary *taskAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:self.completeLocalPath error:nil];
     long long taskSize = [taskAttributes[NSFileSize] longLongValue];
     
     return fileSize + taskSize;
@@ -278,7 +257,7 @@ static NSString * _CacheDirectoryName;
 
 
 - (void)save {
-    [NSKeyedArchiver archiveRootObject:self toFile:[self absolutePathWithRelativePath:self.taskURLPath]];
+    [NSKeyedArchiver archiveRootObject:self toFile:[NSString toAbsolute:self.taskURLPath]];
 }
 
 - (void)prepare {
@@ -327,7 +306,6 @@ static NSString * _CacheDirectoryName;
     
     [self.httpManager GET:self.videoURLPath parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
         
-#warning todo 有非常小的几率服务器返回的content range不是请求头里的，我后面有时间再回头看看，导致视频会花屏
         
         CDVideoBlock *incomingBlock = [[CDVideoBlock alloc] initWithOffset:wself.offset length:task.countOfBytesReceived];
         [wself updateLoadedBlocksWithIncomingBlock:incomingBlock];
@@ -441,12 +419,12 @@ static NSString * _CacheDirectoryName;
             [self notifyStateChanged];
             [self save];
             
-            
             // 完整下载好了
-            if (self.completelyLoaded) {
-                
+            
+            if ([self testIntegrated]) {
                 [self finish];
             }
+            
         }
         
     });
@@ -485,10 +463,19 @@ static NSString * _CacheDirectoryName;
     [self save];
 }
 
-- (void)testIntegrated:(void(^)(BOOL))result {
-    if (result) {
-        result(YES);
+- (BOOL)testIntegrated {
+    if (self.infoProvider.md5.length > 0) {
+        NSString *md5 = [FileHash md5HashOfFileAtPath:self.completeLocalPath];
+        BOOL integrated = NO;
+        if ([md5 isEqualToString:[self.infoProvider md5]]) {
+            integrated = YES;
+        }
+        self.videoFileMD5 = md5;
+        return integrated;
+    } else {
+        return [self completelyLoaded];
     }
+    
 }
 
 
@@ -505,28 +492,38 @@ static NSString * _CacheDirectoryName;
     [self notifyStateChanged];
     [self save];
     
-    NSDictionary *info = [[NSFileManager defaultManager] attributesOfItemAtPath:[self absolutePathWithRelativePath:self.localURLPath] error:nil];
+//    NSDictionary *info = [[NSFileManager defaultManager] attributesOfItemAtPath:[NSString toAbsolute:self.localURLPath] error:nil];
     //    NSLog(@"finished video size %@", info);
     
 }
 
 - (void)destroy {
     [self pause];
-    [[NSFileManager defaultManager] removeItemAtURL:[NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.localURLPath]] error:nil];
-    [[NSFileManager defaultManager] removeItemAtURL:[NSURL fileURLWithPath:[self absolutePathWithRelativePath:self.taskURLPath]] error:nil];
+    [[NSFileManager defaultManager] removeItemAtURL:[NSURL fileURLWithPath:self.completeLocalPath] error:nil];
+    [[NSFileManager defaultManager] removeItemAtURL:[NSURL fileURLWithPath:[NSString toAbsolute:self.taskURLPath]] error:nil];
     
 }
 
 #pragma mark video block
 
+
 - (BOOL)completelyLoaded {
-    if (self.loadedVideoBlocks.count != 1) {
-        return NO;
+    if ([self.infoProvider md5].length > 0) {
+        if ([self.videoFileMD5 isEqualToString:[self.infoProvider md5]]) {
+            return YES;
+        } else {
+            return NO;
+        }
     } else {
-        CDVideoBlock *block = self.loadedVideoBlocks.lastObject;
-        
-        return block.length == self.totalBytes;
+        if (self.loadedVideoBlocks.count != 1) {
+            return NO;
+        } else {
+            CDVideoBlock *block = self.loadedVideoBlocks.lastObject;
+            
+            return block.length == self.totalBytes;
+        }
     }
+    
 }
 
 - (NSArray<CDVideoBlock *> *)loadedVideoBlocks {

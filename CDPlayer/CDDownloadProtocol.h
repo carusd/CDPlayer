@@ -14,19 +14,22 @@
 
 @optional
 
-@property (readonly) NSInteger duration; // 单位为秒
+@property (readonly) int64_t duration; // 单位为秒
 @property (readonly) BOOL completelyLoaded;
 @property (readonly, copy) NSString *title;
 @property (readonly) int64_t size; // 单位为byte
 @property (readonly) int64_t width;
 @property (readonly) int64_t height;
+@property (readonly, copy) NSString *md5;
 @end
 
 
 @class CDVideoDownloadTask;
 @protocol CDVideoDownloadTaskPersistenceManager <NSObject>
 
-@property (nonatomic, readonly) NSString *cacheDirURLPath;
+
+@property (nonatomic, readonly) NSString *taskDirURLAbsolutePath;
+@property (nonatomic, readonly) NSString *videoDirURLAbsolutePath;
 
 - (NSMutableArray<CDVideoDownloadTask *> *)tasksWithTag:(NSString *)tag;
 - (void)addTask:(CDVideoDownloadTask *)task;
