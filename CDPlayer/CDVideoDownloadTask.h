@@ -23,6 +23,7 @@ typedef enum : NSUInteger {
 extern NSString * const CDVideoDownloadStateDidChangedNotif;
 extern NSString * const CDVideoDownloadTaskDidHasNewBlockNotif;
 extern NSString * const CDVideoDownloadTaskInconsistenceNotif;
+extern NSString * const CDVideoDownloadTaskLoadBlockUseTimeNotif;
 
 extern NSString * const CDVideoDownloadTaskNotifTaskKey;
 extern NSString * const CDVideoDownloadTaskNotifRequestRangeKey;
@@ -32,6 +33,7 @@ extern NSString * const CDVideoDownloadTaskNotifResponseRangeKey;
 extern NSString * const CDVideoDownloadBackgroundSessionIdentifier;
 
 typedef void(^HandleDownloadProgress)(CGFloat);
+@class CDPlayer;
 @interface CDVideoDownloadTask : NSObject<CDVideoInfoProvider, NSCoding>
 
 
@@ -39,7 +41,7 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 - (id)initWithVideoInfoProvider:(id<CDVideoInfoProvider>)provider taskURLPath:(NSString *)taskURLPath;
 
 
-
+@property (nonatomic, weak) CDPlayer *player;
 @property (nonatomic, readonly) NSString *taskURLPath;
 @property (readonly) CDVideoDownloadState state;
 @property (nonatomic) NSInteger priority;
@@ -61,6 +63,7 @@ typedef void(^HandleDownloadProgress)(CGFloat);
 
 
 @property (nonatomic) NSUInteger frequency; // 下载频率，通过添加下载等待时间来控制宽带占用
+@property (nonatomic) NSInteger loadBlockTime; // 当前请求的用时
 
 - (long long)sizeInDisk;
 

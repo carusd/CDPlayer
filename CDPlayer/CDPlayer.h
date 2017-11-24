@@ -25,6 +25,7 @@ extern NSString * const CDPlayerItemDidPlayToEndTimeNotif;
 @property (nonatomic ,readonly) BOOL fromLocalFile;
 @property (nonatomic, readonly) CDVideoDownloadTask *task;
 @property (nonatomic, readonly) CGFloat playProgress;
+@property (nonatomic, readonly) NSMutableArray<AVAssetResourceLoadingRequest *> *requests;
 
 
 + (NSString *)dispatcherTag;
@@ -34,8 +35,8 @@ extern NSString * const CDPlayerItemDidPlayToEndTimeNotif;
 - (void)play;
 - (void)pause;
 - (void)stop;
-
 - (void)continueToBuffer; // 因为错误被迫停止，需要重新开始加载的时候，调用这个方法
+- (void)destroy; // 如果要销毁CDPlayer，必须先调用这个
 
 - (BOOL)seekToPosition:(double)position;
 

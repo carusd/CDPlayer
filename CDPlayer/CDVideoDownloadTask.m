@@ -18,6 +18,7 @@ NSString * const CDVideoDownloadErrorDomain = @"com.carusd.player.task.error";
 NSString * const CDVideoDownloadStateDidChangedNotif = @"CDVideoDownloadStateDidChangedNotif";
 NSString * const CDVideoDownloadTaskDidHasNewBlockNotif = @"CDVideoDownloadTaskDidHasNewBlockNotif";
 NSString * const CDVideoDownloadTaskInconsistenceNotif = @"CDVideoDownloadTaskInconsistenceNotif";
+NSString * const CDVideoDownloadTaskLoadBlockUseTimeNotif = @"CDVideoDownloadTaskLoadBlockUseTimeNotif";
 
 NSString * const CDVideoDownloadTaskNotifTaskKey = @"CDVideoDownloadTaskNotifTaskKey";
 NSString * const CDVideoDownloadTaskNotifRequestRangeKey = @"CDVideoDownloadTaskNotifRequestRangeKey";
@@ -27,7 +28,10 @@ NSString * const CDVideoDownloadBackgroundSessionIdentifier = @"CDVideoDownloadB
 
 #define DefaultDownloadSize (100000)
 
+
 @interface CDVideoDownloadTask ()
+
+
 
 @property (nonatomic, strong) NSString *videoURLPath;
 @property (nonatomic, strong) NSString *localURLPath;
@@ -51,6 +55,8 @@ NSString * const CDVideoDownloadBackgroundSessionIdentifier = @"CDVideoDownloadB
 @property (nonatomic, strong) id<CDVideoInfoProvider> infoProvider;
 
 @property (nonatomic) long long nextOffset; // 下一次下载，从这里开始
+
+@property (nonatomic, strong) NSTimer *timer;
 @end
 
 @implementation CDVideoDownloadTask
@@ -283,6 +289,26 @@ static NSString * _CacheDirectoryName;
     
 }
 
+- (void)countingLoadBlockTime:(NSTimer *)timer {
+    self.loadBlockTime++;
+}
+
+- (void)startCountingRequest {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.loadBlockTime = 0;
+        [self stopCountingRequest];
+        self.timer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(countingLoadBlockTime:) userInfo:nil repeats:YES];
+    });
+    
+}
+
+- (void)stopCountingRequest {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.timer invalidate];
+        self.timer = nil;
+    });
+    
+}
 
 - (void)_loadBlock {
     AFHTTPRequestSerializer *requestSerializer = [AFHTTPRequestSerializer serializer];
@@ -301,9 +327,9 @@ static NSString * _CacheDirectoryName;
     dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
     
     //    NSLog(@"%@ requesting %@, with range %@, with total %lld", self, self.videoURLPath, range, self.totalBytes);
-    
+    [self startCountingRequest];
     [self.httpManager GET:self.videoURLPath parameters:nil progress:nil success:^(NSURLSessionDataTask *task, NSData *videoBlock) {
-        
+        [wself stopCountingRequest];
         
         CDVideoBlock *incomingBlock = [[CDVideoBlock alloc] initWithOffset:wself.offset length:task.countOfBytesReceived];
         [wself updateLoadedBlocksWithIncomingBlock:incomingBlock];
@@ -345,14 +371,15 @@ static NSString * _CacheDirectoryName;
         
         dispatch_semaphore_signal(semaphore);
     } failure:^(NSURLSessionDataTask *task, NSError *e) {
+        [wself stopCountingRequest];
         NSError *error = nil;
         if (CDVideoDownloadStatePreparing == wself.state) {
             error = [[NSError alloc] initWithDomain:CDVideoDownloadErrorDomain code:CDVideoDownloadTaskErrorCodePrepareLoadError userInfo:@{NSLocalizedDescriptionKey: @"prepare load error"}];
         } else if (CDVideoDownloadStateLoading == wself.state) {
             error = [[NSError alloc] initWithDomain:CDVideoDownloadErrorDomain code:CDVideoDownloadTaskErrorCodeLoadError userInfo:@{NSLocalizedDescriptionKey: @"load error"}];
         }
-        wself.error = error;
-        [wself loadError];
+//        wself.error = error;
+//        [wself loadError];
         [wself encounterError:error];
         
         dispatch_semaphore_signal(semaphore);

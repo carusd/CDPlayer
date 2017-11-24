@@ -182,7 +182,8 @@
     
     NSString *filename = [[[provider videoURLPath] lastPathComponent] stringByDeletingPathExtension];
     
-    NSString *taskURLPath = [NSString stringWithFormat:@"%@/%@", [self.persistenceManager taskDirURLAbsolutePath], filename];
+    CDVideoDownloadMegaManager *megaManager = (CDVideoDownloadMegaManager *)self.persistenceManager;
+    NSString *taskURLPath = [NSString stringWithFormat:@"%@/%@", megaManager.taskDirName, filename];
     
     
     task = [[CDVideoDownloadTask alloc] initWithVideoInfoProvider:provider taskURLPath:taskURLPath];
